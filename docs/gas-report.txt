@@ -1,0 +1,198 @@
+$ forge test --gas-report
+No files changed, compilation skipped
+
+Ran 92 tests for test/LegacyVault.t.sol:LegacyVaultTest
+[PASS] testFuzz_RevertWhen_NonOwnerCallsOwnerFunctions(address) (runs: 1000, μ: 121207, ~: 121207)
+[PASS] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 1000, μ: 4049082, ~: 4090193)
+[PASS] test_ApproveClaim_CountsVote() (gas: 202027)
+[PASS] test_ApproveClaim_ExtraApprovalDoesNotMoveUnlockTime() (gas: 346111)
+[PASS] test_ApproveClaim_ReachingThresholdSchedulesUnlock() (gas: 271839)
+[PASS] test_CancelClaim_DuringTimelockBlocksFinalize() (gas: 382878)
+[PASS] test_CancelClaim_OldApprovalsDoNotCarryOver() (gas: 585819)
+[PASS] test_CancelClaim_ReturnsToActiveAndChecksIn() (gas: 247652)
+[PASS] test_CheckIn_UpdatesLastCheckIn() (gas: 72479)
+[PASS] test_Constructor_AcceptsPeriodsOfExactlyOneDay() (gas: 3024399)
+[PASS] test_Constructor_AcceptsTenHeirsAndTenGuardians() (gas: 3924476)
+[PASS] test_Constructor_EmitsDepositedWhenFunded() (gas: 3022085)
+[PASS] test_Constructor_SetsConfiguration() (gas: 198972)
+[PASS] test_Deposit_ByOwnerAddsBalanceAndChecksIn() (gas: 61371)
+[PASS] test_Deposit_ByStrangerDoesNotCheckIn() (gas: 54943)
+[PASS] test_EndToEnd_HappyPath() (gas: 793518)
+[PASS] test_FinalizeClaim_ByAnyoneAtUnlockTime() (gas: 461794)
+[PASS] test_GetStatus_ReflectsEachPhase() (gas: 501124)
+[PASS] test_Receive_PlainTransferIsAccepted() (gas: 42698)
+[PASS] test_RevertWhen_ApproveWithoutActiveClaim() (gas: 38156)
+[PASS] test_RevertWhen_CancelAfterDistributed() (gas: 440267)
+[PASS] test_RevertWhen_CancelWithoutClaim() (gas: 35947)
+[PASS] test_RevertWhen_CheckInDuringClaiming() (gas: 127527)
+[PASS] test_RevertWhen_DepositAfterDistributed() (gas: 446936)
+[PASS] test_RevertWhen_DepositDuringClaiming() (gas: 134217)
+[PASS] test_RevertWhen_DuplicateGuardian() (gas: 621982)
+[PASS] test_RevertWhen_DuplicateHeir() (gas: 621960)
+[PASS] test_RevertWhen_FinalizeBeforeThreshold() (gas: 206109)
+[PASS] test_RevertWhen_FinalizeBeforeTimelock() (gas: 302929)
+[PASS] test_RevertWhen_FinalizeTwice() (gas: 437636)
+[PASS] test_RevertWhen_FinalizeWithoutApprovals() (gas: 126673)
+[PASS] test_RevertWhen_FinalizeWithoutClaim() (gas: 33313)
+[PASS] test_RevertWhen_GuardianApprovesTwice() (gas: 213233)
+[PASS] test_RevertWhen_GuardianCancelsClaim() (gas: 123864)
+[PASS] test_RevertWhen_GuardianChecksIn() (gas: 32282)
+[PASS] test_RevertWhen_GuardianIsAlsoHeir() (gas: 621958)
+[PASS] test_RevertWhen_GuardianIsZeroAddress() (gas: 620880)
+[PASS] test_RevertWhen_GuardianUpdatesHeirs() (gas: 46996)
+[PASS] test_RevertWhen_GuardianWithdraws() (gas: 38372)
+[PASS] test_RevertWhen_GuardianWithdrawsInheritance() (gas: 444099)
+[PASS] test_RevertWhen_HeirAndShareLengthsDiffer() (gas: 621128)
+[PASS] test_RevertWhen_HeirApproves() (gas: 124022)
+[PASS] test_RevertWhen_HeirCancelsClaim() (gas: 121820)
+[PASS] test_RevertWhen_HeirChecksIn() (gas: 32280)
+[PASS] test_RevertWhen_HeirIsZeroAddress() (gas: 620837)
+[PASS] test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected() (gas: 3733831)
+[PASS] test_RevertWhen_HeirShareIsZero() (gas: 621788)
+[PASS] test_RevertWhen_HeirUpdatesHeirs() (gas: 45017)
+[PASS] test_RevertWhen_HeirWithdraws() (gas: 38284)
+[PASS] test_RevertWhen_HeirWithdrawsInheritanceTwice() (gas: 487483)
+[PASS] test_RevertWhen_InactivityPeriodBelowOneDay() (gas: 621689)
+[PASS] test_RevertWhen_MoreThanTenGuardians() (gas: 669006)
+[PASS] test_RevertWhen_MoreThanTenHeirs() (gas: 677975)
+[PASS] test_RevertWhen_NoGuardians() (gas: 611407)
+[PASS] test_RevertWhen_NoHeirs() (gas: 608753)
+[PASS] test_RevertWhen_OwnerApproves() (gas: 126088)
+[PASS] test_RevertWhen_OwnerIsGuardian() (gas: 621553)
+[PASS] test_RevertWhen_OwnerIsHeir() (gas: 621594)
+[PASS] test_RevertWhen_OwnerRejectsEth() (gas: 3499909)
+[PASS] test_RevertWhen_OwnerStartsClaim() (gas: 48527)
+[PASS] test_RevertWhen_OwnerWithdrawsAfterDistributed() (gas: 446247)
+[PASS] test_RevertWhen_OwnerWithdrawsInheritance() (gas: 444077)
+[PASS] test_RevertWhen_PlainTransferAfterDistributed() (gas: 447275)
+[PASS] test_RevertWhen_PlainTransferDuringClaiming() (gas: 134536)
+[PASS] test_RevertWhen_SharesSumAbove10000() (gas: 621775)
+[PASS] test_RevertWhen_SharesSumBelow10000() (gas: 621733)
+[PASS] test_RevertWhen_StartClaimAfterOwnerCheckedIn() (gas: 85499)
+[PASS] test_RevertWhen_StartClaimBeforeInactivityEnds() (gas: 48212)
+[PASS] test_RevertWhen_StartClaimWhileAlreadyClaiming() (gas: 129757)
+[PASS] test_RevertWhen_StrangerApproves() (gas: 126089)
+[PASS] test_RevertWhen_StrangerStartsClaim() (gas: 48482)
+[PASS] test_RevertWhen_StrangerWithdrawsInheritance() (gas: 444076)
+[PASS] test_RevertWhen_ThresholdExceedsGuardianCount() (gas: 621878)
+[PASS] test_RevertWhen_ThresholdIsZero() (gas: 621910)
+[PASS] test_RevertWhen_TimelockPeriodBelowOneDay() (gas: 621657)
+[PASS] test_RevertWhen_UpdateHeirsDuringClaiming() (gas: 137898)
+[PASS] test_RevertWhen_UpdateHeirsWithDuplicate() (gas: 80806)
+[PASS] test_RevertWhen_UpdateHeirsWithGuardian() (gas: 77956)
+[PASS] test_RevertWhen_UpdateHeirsWithInvalidSharesTotal() (gas: 97653)
+[PASS] test_RevertWhen_UpdateHeirsWithOwner() (gas: 76110)
+[PASS] test_RevertWhen_WithdrawDuringClaiming() (gas: 133508)
+[PASS] test_RevertWhen_WithdrawExceedsBalance() (gas: 41705)
+[PASS] test_RevertWhen_WithdrawInheritanceBeforeDistributed() (gas: 43399)
+[PASS] test_StartClaim_ByGuardianAfterInactivity() (gas: 104458)
+[PASS] test_StartClaim_ByHeirAfterInactivity() (gas: 127767)
+[PASS] test_UpdateHeirs_KeepingSameHeirsIsNotDuplicate() (gas: 105105)
+[PASS] test_UpdateHeirs_RemovedHeirCannotStartClaim() (gas: 130878)
+[PASS] test_UpdateHeirs_ReplacesListAndChecksIn() (gas: 207770)
+[PASS] test_WithdrawInheritance_EachHeirReceivesCorrectShare() (gas: 541392)
+[PASS] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3583271)
+[PASS] test_Withdraw_OwnerCanWithdrawEntireBalance() (gas: 49730)
+[PASS] test_Withdraw_OwnerReceivesEthAndChecksIn() (gas: 66028)
+Suite result: ok. 92 passed; 0 failed; 0 skipped; finished in 277.33ms (616.00ms CPU time)
+
+╭------------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/LegacyVault.sol:LegacyVault Contract |                 |        |        |        |         |
++=================================================================================================+
+| Deployment Cost                          | Deployment Size |        |        |        |         |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                  2961888 |           15591 |        |        |        |         |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                          |                 |        |        |        |         |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                            | Min             | Avg    | Median | Max    | # Calls |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| approvalCount                            |            2493 |   2493 |   2493 |   2493 |       8 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| approveClaim                             |           23526 |  78069 |  75136 |  82094 |     557 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| cancelClaim                              |           21322 |  21618 |  21322 |  46104 |     260 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| checkIn                                  |           21367 |  21442 |  21367 |  29770 |     258 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| claimId                                  |            2471 |   2471 |   2471 |   2471 |       3 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| deposit                                  |           24118 |  26869 |  25136 |  31354 |       6 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| finalizeClaim                            |           24121 | 197037 | 173816 | 333016 |     276 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| getStatus                                |           12529 |  12529 |  12529 |  12529 |       4 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| guardians                                |            5053 |   5053 |   5053 |   5053 |       3 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| hasApproved                              |            3138 |   3138 |   3138 |   3138 |       4 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| heirs                                    |            4990 |   4990 |   4990 |   4990 |       7 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| inactivityPeriod                         |             370 |    370 |    370 |    370 |     296 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| inheritanceOf                            |            2890 |   2890 |   2890 |   2890 |    2871 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| isGuardian                               |            2902 |   2902 |   2902 |   2902 |       2 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| isHeir                                   |            2944 |   2944 |   2944 |   2944 |       9 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| lastCheckIn                              |            2514 |   2514 |   2514 |   2514 |     306 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| owner                                    |             463 |    463 |    463 |    463 |       1 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| receive                                  |           23888 |  24391 |  24391 |  24895 |       4 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| sharesBps                                |            4918 |   4918 |   4918 |   4918 |       6 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| snapshot                                 |            2537 |   2537 |   2537 |   2537 |     255 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| startClaim                               |           25803 |  77234 |  78865 |  78865 |     300 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| state                                    |            2643 |   2643 |   2643 |   2643 |       6 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| threshold                                |             370 |    370 |    370 |    370 |       1 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| timelockPeriod                           |             415 |    415 |    415 |    415 |       2 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| unlockTime                               |            2515 |   2515 |   2515 |   2515 |     275 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| updateHeirs                              |           26460 |  27946 |  26460 | 119781 |     264 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| withdraw                                 |           27034 |  27255 |  27034 |  44433 |     261 |
+|------------------------------------------+-----------------+--------+--------+--------+---------|
+| withdrawInheritance                      |           28819 |  45063 |  45118 |  45118 |    1356 |
+╰------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭-----------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/LegacyVault.t.sol:RejectingHeir Contract |                 |       |        |       |         |
++====================================================================================================+
+| Deployment Cost                               | Deployment Size |       |        |       |         |
+|-----------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                        134343 |             403 |       |        |       |         |
+|-----------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                               |                 |       |        |       |         |
+|-----------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                 | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------+-----------------+-------+--------+-------+---------|
+| withdrawFrom                                  |           48630 | 48630 |  48630 | 48630 |       1 |
+╰-----------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭------------------------------------------------+-----------------+---------+---------+---------+---------╮
+| test/LegacyVault.t.sol:RejectingOwner Contract |                 |         |         |         |         |
++==========================================================================================================+
+| Deployment Cost                                | Deployment Size |         |         |         |         |
+|------------------------------------------------+-----------------+---------+---------+---------+---------|
+|                                         605467 |            2583 |         |         |         |         |
+|------------------------------------------------+-----------------+---------+---------+---------+---------|
+|                                                |                 |         |         |         |         |
+|------------------------------------------------+-----------------+---------+---------+---------+---------|
+| Function Name                                  | Min             | Avg     | Median  | Max     | # Calls |
+|------------------------------------------------+-----------------+---------+---------+---------+---------|
+| deployVault                                    |         2760948 | 2760948 | 2760948 | 2760948 |       1 |
+|------------------------------------------------+-----------------+---------+---------+---------+---------|
+| withdrawFrom                                   |           45451 |   45451 |   45451 |   45451 |       1 |
+╰------------------------------------------------+-----------------+---------+---------+---------+---------╯
+
+
+Ran 1 test suite in 416.88ms (277.33ms CPU time): 92 tests passed, 0 failed, 0 skipped (92 total tests)

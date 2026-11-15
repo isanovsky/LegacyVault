@@ -13,3 +13,7 @@ remappings = [
 ]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+[fuzz]
+# Jumlah input acak per fuzz test. Bawaan forge 256; dinaikkan agar pembagian porsi diuji lebih banyak kombinasi.
+runs = 1000
