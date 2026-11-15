@@ -1,0 +1,17 @@
+{
+  "name": "legacyvault-ui",
+  "private": true,
+  "description": "Simulasi LegacyVault untuk presentasi. Terhubung ke Anvil lokal (chainId 31337).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort"
+  },
+  "dependencies": {
+    "ethers": "6.17.0"
+  },
+  "devDependencies": {
+    "vite": "8.3.8"
+  }
+}

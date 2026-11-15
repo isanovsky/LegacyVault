@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LegacyVault: simulasi lokal</title>
+  </head>
+  <body>
+    <header class="masthead">
+      <div class="masthead-title">
+        <h1>LegacyVault</h1>
+        <p class="subtitle">Simulasi brankas warisan ETH di jaringan lokal Anvil</p>
+      </div>
+      <dl class="network" id="network">
+        <div><dt>Jaringan</dt><dd id="network-name">menghubungkan…</dd></div>
+        <div><dt>Blok</dt><dd class="mono" id="network-block">-</dd></div>
+        <div><dt>Waktu blockchain</dt><dd class="mono" id="network-time">-</dd></div>
+        <div><dt>Kontrak</dt><dd class="mono" id="network-contract">-</dd></div>
+      </dl>
+    </header>
+
+    <div id="fatal" class="fatal" role="alert" hidden></div>
+
+    <section class="controls" aria-label="Pengaturan simulasi">
+      <fieldset class="persona-picker">
+        <legend>Bertindak sebagai</legend>
+        <div id="personas" class="personas"></div>
+      </fieldset>
+
+      <fieldset class="time-travel">
+        <legend>Majukan waktu blockchain</legend>
+        <div class="time-buttons">
+          <button type="button" data-seconds="604800">+7 hari</button>
+          <button type="button" data-seconds="2592000">+30 hari</button>
+          <button type="button" data-seconds="15552000">+180 hari</button>
+        </div>
+        <p class="hint">Hanya di Anvil (chainId 31337), memakai evm_increaseTime dan evm_mine.</p>
+      </fieldset>
+    </section>
+
+    <main class="ledger">
+      <section class="column" aria-labelledby="col-state">
+        <h2 id="col-state">Tahap vault</h2>
+        <ol id="state-diagram" class="state-diagram"></ol>
+        <p class="cancel-note">
+          <span class="mono">cancelClaim</span>: pemilik dapat mengembalikan Claiming ke Active.
+        </p>
+
+        <h3>Syarat pencairan</h3>
+        <ul id="conditions" class="conditions"></ul>
+
+        <h3>Riwayat klaim</h3>
+        <ul id="claim-history" class="claim-history"></ul>
+      </section>
+
+      <section class="column" aria-labelledby="col-actions">
+        <h2 id="col-actions">Aksi</h2>
+        <p id="actor-line" class="actor-line"></p>
+        <div id="result" class="result" aria-live="polite"></div>
+        <div id="actions" class="actions"></div>
+        <label class="test-mode">
+          <input type="checkbox" id="test-mode" />
+          Mode uji: aktifkan juga aksi yang tidak sesuai peran, supaya terlihat kontrak yang menolaknya.
+        </label>
+
+        <h2>Ringkasan</h2>
+        <dl id="balances" class="figures"></dl>
+        <h3>Ahli waris</h3>
+        <table class="table" id="heir-table">
+          <thead>
+            <tr><th scope="col">Nama</th><th scope="col">Porsi</th><th scope="col" id="heir-amount-head">Bagian</th><th scope="col">Status</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <h3>Guardian</h3>
+        <table class="table" id="guardian-table">
+          <thead>
+            <tr><th scope="col">Nama</th><th scope="col">Alamat</th><th scope="col">Klaim berjalan</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section class="column" aria-labelledby="col-log">
+        <h2 id="col-log">Buku catatan</h2>
+        <p class="hint">Dibaca dari event kontrak. Terbaru di atas.</p>
+        <ol id="event-log" class="event-log"></ol>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

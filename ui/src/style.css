@@ -1,0 +1,561 @@
+/*
+  Konsep visual: dokumen notaris / buku besar.
+  Kertas hangat, tinta hampir hitam, satu warna aksen marun untuk cap dan sorotan.
+  Pemisah berupa garis 1px, bukan kartu berbayang. Status selalu ditulis dengan kata
+  (cap "DIBATALKAN", "TERPENUHI"), tidak hanya dengan warna.
+
+  Kontras (terhadap --paper #f6f3ec):
+  --ink    #1c1a17  15,7:1
+  --muted  #57524a   7,0:1  (6,3:1 di atas --paper-shade)
+  --accent #7a1f26   9,2:1  (8,3:1 di atas --paper-shade)
+  Semua di atas batas WCAG AA (4,5:1 untuk teks biasa).
+*/
+
+:root {
+  --paper: #f6f3ec;
+  --paper-shade: #ece7dc;
+  --ink: #1c1a17;
+  --muted: #57524a;
+  --rule: #c9c1b0;
+  --accent: #7a1f26;
+
+  --font-serif: Georgia, "Times New Roman", Times, serif;
+  --font-sans: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: 20px 24px 48px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: normal;
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.9rem;
+  letter-spacing: 0.01em;
+}
+
+h2 {
+  font-size: 1.2rem;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+}
+
+h3 {
+  font-size: 1rem;
+  font-style: italic;
+  margin: 20px 0 8px;
+}
+
+* + h2 {
+  margin-top: 28px;
+}
+
+.mono,
+.amount,
+time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.muted,
+.hint,
+.reason,
+.subtitle,
+.state-desc,
+.condition-detail,
+.log-meta,
+.empty {
+  color: var(--muted);
+}
+
+.hint {
+  font-size: 0.85rem;
+  margin: 4px 0 0;
+}
+
+/* ---------- Kepala halaman ---------- */
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px 32px;
+  border-bottom: 3px double var(--ink);
+  padding-bottom: 12px;
+}
+
+.subtitle {
+  margin: 2px 0 0;
+}
+
+.network {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.network dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.network dd {
+  margin: 0;
+}
+
+.fatal {
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  padding: 10px 14px;
+  margin: 16px 0 0;
+  font-weight: 600;
+}
+
+/* ---------- Pemilih tokoh dan waktu ---------- */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+legend {
+  font-family: var(--font-serif);
+  font-style: italic;
+  margin-bottom: 6px;
+  padding: 0;
+}
+
+.personas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.persona {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  border: 1px solid var(--rule);
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.persona:has(input:checked) {
+  border: 2px solid var(--accent);
+  padding: 4px 9px;
+}
+
+.persona:has(input:checked) .persona-name {
+  font-weight: 700;
+}
+
+.persona input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+.persona-role {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.time-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+/* ---------- Tombol dan input ---------- */
+
+button {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: var(--paper-shade);
+}
+
+button:disabled {
+  color: var(--muted);
+  border-style: dashed;
+  border-color: var(--muted);
+  cursor: not-allowed;
+}
+
+input[type="text"] {
+  font: inherit;
+  color: var(--ink);
+  background: #fffdf8;
+  border: 1px solid var(--muted);
+  border-radius: 2px;
+  padding: 4px 6px;
+}
+
+input:disabled {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.persona:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.persona input:focus-visible {
+  outline: none;
+}
+
+/* ---------- Tiga kolom buku besar ---------- */
+
+.ledger {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.9fr) minmax(380px, 1.4fr) minmax(300px, 1.1fr);
+  margin-top: 20px;
+}
+
+.column {
+  padding: 0 24px;
+  min-width: 0;
+}
+
+.column:first-child {
+  padding-left: 0;
+}
+
+.column:last-child {
+  padding-right: 0;
+}
+
+.column + .column {
+  border-left: 1px solid var(--rule);
+}
+
+@media (max-width: 1080px) {
+  .ledger {
+    grid-template-columns: 1fr;
+  }
+
+  .column,
+  .column:first-child,
+  .column:last-child {
+    padding: 0;
+  }
+
+  .column + .column {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+    margin-top: 24px;
+    padding-top: 16px;
+  }
+}
+
+/* ---------- Cap / stempel ---------- */
+
+.stamp {
+  display: inline-block;
+  border: 3px double var(--accent);
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  padding: 0 5px;
+  border-radius: 2px;
+  transform: rotate(-1.5deg);
+  white-space: nowrap;
+  vertical-align: 1px;
+}
+
+/* ---------- Kolom kiri: diagram tahap ---------- */
+
+.state-diagram {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.state-node {
+  border: 1px solid var(--rule);
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  align-items: center;
+}
+
+.state-node .state-name {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--muted);
+}
+
+.state-node .state-desc {
+  grid-column: 1 / -1;
+  font-size: 0.83rem;
+}
+
+.state-node.current {
+  border: 2px solid var(--accent);
+  padding: 7px 9px;
+}
+
+.state-node.current .state-name {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.state-arrow {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 3px 0 3px 14px;
+}
+
+.cancel-note {
+  font-size: 0.83rem;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+.conditions,
+.claim-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.condition {
+  display: grid;
+  grid-template-columns: 14px auto 1fr;
+  gap: 0 8px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.marker {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--ink);
+  align-self: center;
+}
+
+.condition.met .marker {
+  background: var(--ink);
+}
+
+.condition-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.condition.met .condition-status {
+  color: var(--accent);
+}
+
+.condition-title {
+  font-weight: 600;
+}
+
+.condition-detail {
+  grid-column: 2 / -1;
+  font-size: 0.85rem;
+}
+
+.claim-history li {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ---------- Kolom tengah: aksi dan ringkasan ---------- */
+
+.actor-line {
+  margin: 0 0 10px;
+}
+
+.result {
+  min-height: 2.6em;
+  margin-bottom: 8px;
+}
+
+.result-line {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--ink);
+  background: var(--paper-shade);
+}
+
+.result-line.rejected {
+  border-left-color: var(--accent);
+}
+
+.actions {
+  border-top: 1px solid var(--rule);
+}
+
+.action {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.action-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-button {
+  min-width: 13em;
+  text-align: left;
+}
+
+.amount {
+  width: 7em;
+  text-align: right;
+}
+
+.reason {
+  margin: 3px 0 0;
+  font-size: 0.83rem;
+}
+
+.action.denied .reason {
+  font-style: italic;
+}
+
+.test-mode {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
+.test-mode input {
+  accent-color: var(--accent);
+  margin-top: 3px;
+}
+
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 40px;
+  margin: 0;
+}
+
+.figures dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.figures dd {
+  margin: 0;
+}
+
+.figure {
+  font-size: 1.35rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--ink);
+  padding: 4px 6px 4px 0;
+}
+
+.table td {
+  border-bottom: 1px solid var(--rule);
+  padding: 6px 6px 6px 0;
+  vertical-align: baseline;
+}
+
+.table .num {
+  text-align: right;
+  padding-right: 14px;
+}
+
+/* ---------- Kolom kanan: buku catatan event ---------- */
+
+.event-log {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.log-entry {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.log-meta {
+  font-size: 0.75rem;
+}
+
+.log-text {
+  margin: 2px 0 0;
+}
+
+.log-entry.minor .log-text {
+  color: var(--muted);
+  font-size: 0.88rem;
+}

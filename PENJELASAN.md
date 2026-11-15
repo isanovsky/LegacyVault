@@ -459,3 +459,101 @@ J: Transaksi yang sudah dikirim tidak bisa ditarik kembali, dan biayanya tetap t
 
 **T: Apakah kontrak di Sepolia sama dengan yang diuji?**
 J: Ya. Skrip deploy memakai hasil kompilasi yang sama dengan test, yaitu compiler 0.8.28 yang dikunci di `foundry.toml`. Verifikasi Etherscan membuktikannya secara publik: Etherscan meng-compile ulang kode sumber dan mencocokkan hasilnya dengan bytecode di Sepolia.
+
+---
+
+## Tahap 5: Tampilan simulasi (UI)
+
+### 1. Apa yang dibuat di tahap ini
+
+Folder `ui/` berisi halaman web untuk mempresentasikan cara kerja kontrak. Halaman ini dibuat dengan Vite, JavaScript biasa, dan ethers v6.17.0. Halaman terhubung langsung ke Anvil (`http://127.0.0.1:8545`) tanpa MetaMask.
+
+| File | Isi |
+|---|---|
+| `ui/index.html` | Kerangka halaman: kepala, pemilih tokoh, tombol waktu, tiga kolom. |
+| `ui/src/chain.js` | Semua komunikasi dengan blockchain: membaca data, mengirim transaksi, memajukan waktu. |
+| `ui/src/errors.js` | Menerjemahkan custom error kontrak menjadi kalimat Indonesia. |
+| `ui/src/format.js` | Format ETH, persen, tanggal, dan durasi. |
+| `ui/src/demo-accounts.js` | Nama dan alamat enam tokoh demo. |
+| `ui/src/main.js` | Mengisi tampilan dan menangani tombol. |
+| `ui/src/style.css` | Gaya "dokumen notaris". |
+
+Perintah baru di `package.json` root: `npm run ui:install` (sekali saja) dan `npm run ui`.
+
+**Isi halaman:**
+- **Kepala:** jaringan, nomor blok, **waktu blockchain** (bukan jam komputer), dan alamat kontrak.
+- **Pemilih tokoh:** enam tombol radio. Peran setiap tokoh (pemilik, ahli waris, guardian) dibaca dari kontrak, tidak ditulis tetap di UI.
+- **Majukan waktu:** +7, +30, dan +180 hari.
+- **Kolom kiri:** diagram tahap Active, Claiming, Distributed dengan tahap sekarang diberi cap "SEKARANG", tiga syarat pencairan dengan status TERPENUHI/BELUM, dan riwayat klaim (cap BERJALAN/DIBATALKAN/FINAL).
+- **Kolom tengah:** daftar aksi, hasil transaksi terakhir (cap BERHASIL/DITOLAK), saldo vault, saldo dompet tokoh, tabel ahli waris dan bagiannya, serta tabel guardian dan status persetujuannya.
+- **Kolom kanan:** buku catatan event kontrak, terbaru di atas, dengan waktu blockchain, nomor blok, dan hash transaksi yang dipendekkan.
+
+**Keputusan desain yang perlu Anda ketahui:**
+- **Tombol dinonaktifkan hanya berdasarkan peran.** Contohnya, Mas Kevin tidak bisa menekan "Setujui klaim", dan alasannya tertulis di bawah tombol. Tetapi syarat waktu dan tahap sengaja **tidak** dicek di UI. Jika Mas Kevin memulai klaim sebelum 180 hari, tombolnya tetap bisa ditekan, dan **kontraklah** yang menolak: "Ditolak: pemilik masih aktif sampai 14 Mei 2027 pukul 23.04." Ini menunjukkan ke dosen bahwa aturannya ada di blockchain, bukan di tampilan.
+- **Mode uji** (kotak centang di kolom tengah) mengaktifkan juga tombol yang tidak sesuai peran, untuk memperlihatkan bahwa kontrak tetap menolak walaupun UI "diakali".
+- **Tidak ada private key di UI.** Transaksi dikirim lewat akun yang sudah dibuka Anvil (`eth_sendTransaction`). Setiap aksi dan setiap tombol waktu memeriksa chainId dulu, dan menolak jika bukan 31337.
+- **Setiap transaksi disimulasikan dulu** (`staticCall`). Jika kontrak akan menolak, pesannya muncul tanpa ada transaksi gagal yang tercatat di blockchain.
+- **`updateHeirs` (mengubah ahli waris) tidak ada di UI.** Fungsi ini butuh formulir daftar alamat dan porsi, dan tidak dipakai di skenario presentasi. Fungsinya tetap bisa dipanggil lewat `cast` dan sudah diuji di test.
+
+**Skenario lengkap yang sudah dijalankan di browser:**
+
+| No | Langkah | Hasil |
+|---|---|---|
+| 1 | Pak Icanov setor 1 ETH | Berhasil, saldo vault 11 ETH |
+| 2 | Pak Icanov check-in | Berhasil |
+| 3 | Mas Kevin mulai klaim (langkah tambahan, untuk menguji penolakan) | Ditolak: pemilik masih aktif sampai 14 Mei 2027 pukul 23.04 |
+| 4 | Majukan 180 hari | Berhasil, syarat "Masa tidak aktif lewat" menjadi TERPENUHI |
+| 5 | Mas Kevin mulai klaim | Berhasil, tahap menjadi Claiming |
+| 6 | Mas Barrok dan Notaris Budi menyetujui | Berhasil, Persetujuan 2/2, timelock sampai 21 Mei 2027 |
+| 7 | Pak Icanov membatalkan | Berhasil, kembali ke Active, klaim #1 diberi cap DIBATALKAN |
+| 8 | Mas Kevin mengulang klaim **langsung** | **Ditolak: pemilik masih aktif sampai 10 November 2027.** Lihat penjelasan di bawah tabel. |
+| 9 | Majukan 180 hari, Mas Kevin mulai klaim #2 | Berhasil, Persetujuan kembali 0/2 |
+| 10 | Mas Barrok menyetujui, lalu menyetujui lagi | Yang pertama berhasil, yang kedua ditolak: guardian ini sudah menyetujui klaim #2 |
+| 11 | Pak RT Wowo menyetujui, lalu langsung finalisasi | Persetujuan 2/2, finalisasi ditolak: masa tunggu belum selesai sampai 17 November 2027 |
+| 12 | Majukan 7 hari, Pak RT Wowo finalisasi | Berhasil, tahap Distributed, 11 ETH dibagikan |
+| 13 | Mas Kevin dan Mas Murni menarik | Berhasil, masing-masing 6,6 ETH dan 4,4 ETH, saldo vault 0 ETH |
+| 14 | Mas Murni menarik lagi | Ditolak: tidak ada bagian yang bisa ditarik |
+
+**Langkah 8 bukan bug.** Sesuai SPEC, `cancelClaim` dihitung sebagai check-in, sehingga masa tidak aktif 180 hari dimulai lagi dari nol. Persetujuan klaim lama juga tidak terbawa (invariant 6). Jadi setelah pemilik membatalkan, klaim baru butuh 180 hari lagi **dan** dua persetujuan baru. Skenario di permintaan tahap ini melewatkan kedua hal itu, jadi langkah 9 sampai 11 saya tambahkan.
+
+**Uji lain:**
+- **Keyboard:** semua kontrol bisa dicapai dengan Tab. Panah kanan dan kiri mengganti tokoh, Spasi mencentang mode uji, Enter menekan tombol. Setelah transaksi, fokus kembali ke tombol yang ditekan. Awalnya fokus hilang ke awal halaman; sudah diperbaiki.
+- **Anvil mati:** muncul pesan "Tidak bisa terhubung ke Anvil… Jalankan npm run anvil lalu npm run seed", dan semua tombol nonaktif. Awalnya UI tidak menyadari Anvil mati karena hanya membaca ulang saat ada blok baru; sekarang koneksi dicek setiap 3 detik.
+- **Jaringan salah:** Anvil dijalankan dengan chainId 1337. UI menampilkan "chainId 1337, bukan 31337", semua aksi nonaktif, dan pemanggilan langsung fungsi majukan waktu ditolak.
+- **Kontras warna:** dihitung dengan rumus WCAG. Teks utama 15,7:1, teks abu-abu 7,0:1, aksen marun 9,2:1. Semuanya di atas batas AA 4,5:1.
+- **Console browser:** tidak ada error.
+
+### 2. Konsep yang dipakai
+
+**dApp (aplikasi terdesentralisasi).** Halaman web biasa yang data dan aturannya ada di blockchain. Halaman ini hanya "jendela" untuk melihat dan memanggil kontrak. Jika halaman ini dihapus, kontrak dan isinya tetap ada dan tetap bisa dipakai lewat `cast` atau aplikasi lain. Analoginya aplikasi mobile banking: aplikasinya bisa diganti, tetapi saldo tetap tersimpan di bank.
+
+**Provider dan signer (ethers.js).**
+- *Provider* adalah sambungan baca ke blockchain, untuk membaca saldo, status, dan event.
+- *Signer* adalah pihak yang "menandatangani" transaksi, yaitu siapa yang bertindak.
+
+Di dunia nyata, signer adalah wallet seperti MetaMask yang memegang private key. Di simulasi ini, Anvil sendiri yang menandatangani atas nama akun demo, sehingga UI tidak memegang kunci apa pun.
+
+**ABI di sisi UI.** File `ui/src/contract.json` dari tahap 4 memberi tahu ethers nama fungsi, event, dan custom error kontrak. Berkat ABI, error mentah seperti `0x2f2fa5e4…` bisa dibaca sebagai `OwnerStillActive(1810...)`, lalu diubah menjadi kalimat dengan tanggal.
+
+**Membaca call vs mengirim transaksi.** Membaca (`getStatus`, `heirs`) gratis dan tidak membuat blok. Mengirim transaksi (`deposit`, `startClaim`) mengubah isi blockchain, membuat blok baru, dan memakai gas. Itu sebabnya saldo dompet tokoh berkurang sedikit setiap kali mereka bertindak, dan UI menampilkannya dengan tanda "±".
+
+**Event sebagai buku catatan.** Kontrak tidak menyimpan riwayat lengkap di variabelnya. Ia hanya memancarkan event (`ClaimStarted`, `ClaimCancelled`, …) yang tersimpan permanen di log blockchain. Kolom kanan membaca ulang semua event sejak blok deploy. Analoginya buku besar notaris: setiap kejadian dicatat dengan tanggal dan tidak bisa dihapus.
+
+**Waktu blockchain.** Kontrak memakai `block.timestamp`, yaitu waktu blok terakhir, bukan jam komputer. Karena itu semua tanggal di UI diambil dari blok. Setelah "Majukan 180 hari", jam di kepala halaman melompat ke tahun depan, sementara jam komputer tetap.
+
+### 3. Pertanyaan yang mungkin diajukan dosen
+
+**T: Kalau UI bisa diakali, apakah dana tidak aman?**
+J: Dana tetap aman, karena semua aturan ada di kontrak. Nyalakan "Mode uji" lalu tekan "Setujui klaim" sebagai Mas Kevin: tombolnya bisa ditekan, tetapi kontrak menolak dengan `NotGuardian`. Siapa pun bisa membuat UI sendiri atau memanggil kontrak langsung, dan aturannya tetap sama.
+
+**T: Kenapa tidak memakai MetaMask?**
+J: Untuk presentasi, berganti-ganti enam akun di MetaMask lambat dan rawan salah klik. Anvil sudah membuka akun-akun demonya, jadi UI cukup menyebut alamat. Cara ini hanya mungkin di jaringan lokal, sehingga UI menolak berjalan jika chainId bukan 31337. Di jaringan sungguhan, setiap orang harus menandatangani dengan wallet masing-masing.
+
+**T: Kenapa setelah dibatalkan, klaim tidak bisa langsung diulang?**
+J: Pembatalan adalah bukti pemilik masih hidup, jadi dihitung sebagai check-in, dan masa tidak aktif dimulai lagi. Jika klaim bisa langsung diulang, ahli waris bisa terus mengganggu pemilik dengan klaim baru setiap kali dibatalkan.
+
+**T: Bagaimana UI tahu siapa pemilik, ahli waris, dan guardian?**
+J: UI membacanya dari kontrak: `owner()`, `isHeir(alamat)`, dan `isGuardian(alamat)`. Yang ditulis di UI hanya nama tokoh untuk alamat demo. Jika vault di-deploy dengan konfigurasi lain lewat `npm run deploy-local`, perannya otomatis menyesuaikan.
+
+**T: Kenapa angka di tabel ahli waris ditulis lengkap sampai wei, tetapi saldo dompet dibulatkan?**
+J: Bagian warisan harus tepat, karena sisa pembulatan wei diberikan ke ahli waris terakhir dan harus terlihat jelas. Saldo dompet berkurang sedikit karena biaya gas setiap transaksi, dan angka panjang itu tidak penting untuk presentasi, jadi dibulatkan ke 4 desimal dengan tanda "±".
