@@ -1,0 +1,19 @@
+# Hasil kompilasi Foundry (dibuat ulang oleh `forge build`)
+out/
+cache/
+
+# Log transaksi dari `forge script` (bisa berisi alamat dan data deploy)
+broadcast/
+
+# Rahasia: private key, RPC URL. Jangan pernah di-commit.
+.env
+.env.*
+!.env.example
+
+# Dependensi JavaScript untuk UI
+node_modules/
+
+# Lain-lain
+.logs/
+.ignore/
+dist/
