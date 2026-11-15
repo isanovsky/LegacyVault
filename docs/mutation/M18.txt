@@ -1,0 +1,75 @@
+# M18 - Ancaman 7. Pembulatan
+# Mutasi: Heir terakhir hanya mendapat porsi bps-nya, tanpa sisa pembulatan
+
+$ git diff -- src/LegacyVault.sol
+diff --git a/src/LegacyVault.sol b/src/LegacyVault.sol
+index b4b633b..8d0440b 100644
+--- a/src/LegacyVault.sol
++++ b/src/LegacyVault.sol
+@@ -341,7 +341,7 @@ contract LegacyVault is ReentrancyGuard {
+             inheritanceOf[heirs[i]] = amount;
+             allocated += amount;
+         }
+-        inheritanceOf[heirs[lastIndex]] = total - allocated;
++        inheritanceOf[heirs[lastIndex]] = (total * sharesBps[lastIndex]) / TOTAL_BPS;
+ 
+         emit ClaimFinalized(claimId, total);
+     }
+warning: in the working copy of 'src/LegacyVault.sol', LF will be replaced by CRLF the next time Git touches it
+
+$ forge test --match-path "test/security/*"
+Compiling 2 files with Solc 0.8.28
+Solc 0.8.28 finished in 796.11ms
+Compiler run successful!
+
+Ran 34 tests for test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[PASS] testFuzz_RevertWhen_NonOwnerCallsOwnerFunctions(address) (runs: 1000, μ: 121207, ~: 121207)
+[FAIL: assertion failed: 166942345723139875763108683 != 166942345723139875763108686; counterexample: calldata=0x89fd376600000000f270263547ad46157115d0615203a96a873458d5578e1d629e6d2634000000000000a20c3ad6b423247295929dff8edef9508b0061551ba0e504d70f0000000000000000000000000000000000000000000000271897bae32f9b6c72 args=[25531710109485418031106792859745678287379584973452515974089731286580 [2.553e67], 260400731111168203517584837730087892715981053422780742241670927 [2.604e62], 721195109337985150066 [7.211e20]]] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 2, μ: 3861124, ~: 3861124)
+[PASS] test_CancelClaim_DuringTimelockBlocksFinalize() (gas: 382899)
+[PASS] test_CancelClaim_OldApprovalsDoNotCarryOver() (gas: 585686)
+[PASS] test_Deposit_ByStrangerDoesNotCheckIn() (gas: 54898)
+[PASS] test_FinalizeClaim_ByAnyoneAtUnlockTime() (gas: 464291)
+[PASS] test_RevertWhen_DepositAfterDistributed() (gas: 449454)
+[PASS] test_RevertWhen_FinalizeBeforeThreshold() (gas: 206086)
+[PASS] test_RevertWhen_FinalizeBeforeTimelock() (gas: 302973)
+[PASS] test_RevertWhen_FinalizeWithoutApprovals() (gas: 126651)
+[PASS] test_RevertWhen_GuardianApprovesTwice() (gas: 213100)
+[PASS] test_RevertWhen_GuardianCancelsClaim() (gas: 123863)
+[PASS] test_RevertWhen_GuardianWithdrawsInheritance() (gas: 446596)
+[PASS] test_RevertWhen_HeirApproves() (gas: 124044)
+[PASS] test_RevertWhen_HeirCancelsClaim() (gas: 121820)
+[PASS] test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected() (gas: 3745134)
+[PASS] test_RevertWhen_HeirWithdrawsInheritanceTwice() (gas: 490068)
+[PASS] test_RevertWhen_InactivityPeriodBelowOneDay() (gas: 623136)
+[PASS] test_RevertWhen_MoreThanTenGuardians() (gas: 670365)
+[PASS] test_RevertWhen_MoreThanTenHeirs() (gas: 679444)
+[PASS] test_RevertWhen_OwnerApproves() (gas: 126066)
+[PASS] test_RevertWhen_OwnerRejectsEth() (gas: 3508029)
+[PASS] test_RevertWhen_OwnerStartsClaim() (gas: 48438)
+[PASS] test_RevertWhen_OwnerWithdrawsInheritance() (gas: 446640)
+[PASS] test_RevertWhen_PlainTransferAfterDistributed() (gas: 449794)
+[PASS] test_RevertWhen_StartClaimAfterOwnerCheckedIn() (gas: 85543)
+[PASS] test_RevertWhen_StartClaimBeforeInactivityEnds() (gas: 48189)
+[PASS] test_RevertWhen_StrangerApproves() (gas: 126088)
+[PASS] test_RevertWhen_StrangerStartsClaim() (gas: 48415)
+[PASS] test_RevertWhen_StrangerWithdrawsInheritance() (gas: 446617)
+[PASS] test_RevertWhen_TimelockPeriodBelowOneDay() (gas: 623126)
+[PASS] test_RevertWhen_UpdateHeirsWithMoreThanTenHeirs() (gas: 123125)
+[PASS] test_UpdateHeirs_RemovedHeirCannotStartClaim() (gas: 130855)
+[FAIL: assertion failed: 333400000000000002 != 333400000000000003] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3462232)
+Suite result: FAILED. 32 passed; 2 failed; 0 skipped; finished in 73.41ms (120.75ms CPU time)
+
+Ran 1 test suite in 74.62ms (73.41ms CPU time): 32 tests passed, 2 failed, 0 skipped (34 total tests)
+
+Failing tests:
+Encountered 2 failing tests in test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[FAIL: assertion failed: 166942345723139875763108683 != 166942345723139875763108686; counterexample: calldata=0x89fd376600000000f270263547ad46157115d0615203a96a873458d5578e1d629e6d2634000000000000a20c3ad6b423247295929dff8edef9508b0061551ba0e504d70f0000000000000000000000000000000000000000000000271897bae32f9b6c72 args=[25531710109485418031106792859745678287379584973452515974089731286580 [2.553e67], 260400731111168203517584837730087892715981053422780742241670927 [2.604e62], 721195109337985150066 [7.211e20]]] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 2, μ: 3861124, ~: 3861124)
+[FAIL: assertion failed: 333400000000000002 != 333400000000000003] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3462232)
+
+Encountered a total of 2 failing tests, 32 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 2 failed tests
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger
+
+Fuzz seed: 0xb70961575113b84e71b3d82fbb7c40e51ccdf5d2e899ed8d4901d80b34eae015 (use `--fuzz-seed` to reproduce)
+(exit code 1)

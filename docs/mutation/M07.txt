@@ -1,0 +1,74 @@
+# M07 - Ancaman 3. Akses
+# Mutasi: Hapus onlyGuardian dari approveClaim
+
+$ git diff -- src/LegacyVault.sol
+diff --git a/src/LegacyVault.sol b/src/LegacyVault.sol
+index b4b633b..1331182 100644
+--- a/src/LegacyVault.sol
++++ b/src/LegacyVault.sol
+@@ -305,7 +305,7 @@ contract LegacyVault is ReentrancyGuard {
+     /// @notice Guardian menyetujui klaim yang sedang berjalan. Satu guardian satu suara per klaim.
+     /// @dev Timelock dijadwalkan tepat saat persetujuan mencapai threshold. Persetujuan tambahan
+     ///      tetap dicatat, tetapi tidak menggeser unlockTime agar timelock tidak bisa diperpanjang terus.
+-    function approveClaim() external onlyGuardian inState(State.Claiming) {
++    function approveClaim() external inState(State.Claiming) {
+         if (hasApproved[claimId][msg.sender]) revert AlreadyApproved(claimId);
+ 
+         hasApproved[claimId][msg.sender] = true;
+warning: in the working copy of 'src/LegacyVault.sol', LF will be replaced by CRLF the next time Git touches it
+
+$ forge test --match-path "test/security/*"
+Compiling 3 files with Solc 0.8.28
+Solc 0.8.28 finished in 778.06ms
+Compiler run successful!
+
+Ran 34 tests for test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[PASS] testFuzz_RevertWhen_NonOwnerCallsOwnerFunctions(address) (runs: 1000, μ: 121207, ~: 121207)
+[PASS] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 1000, μ: 4023316, ~: 4059665)
+[PASS] test_CancelClaim_DuringTimelockBlocksFinalize() (gas: 378421)
+[PASS] test_CancelClaim_OldApprovalsDoNotCarryOver() (gas: 578969)
+[PASS] test_Deposit_ByStrangerDoesNotCheckIn() (gas: 54898)
+[PASS] test_FinalizeClaim_ByAnyoneAtUnlockTime() (gas: 457294)
+[PASS] test_RevertWhen_DepositAfterDistributed() (gas: 442457)
+[PASS] test_RevertWhen_FinalizeBeforeThreshold() (gas: 203847)
+[PASS] test_RevertWhen_FinalizeBeforeTimelock() (gas: 298495)
+[PASS] test_RevertWhen_FinalizeWithoutApprovals() (gas: 126651)
+[PASS] test_RevertWhen_GuardianApprovesTwice() (gas: 208622)
+[PASS] test_RevertWhen_GuardianCancelsClaim() (gas: 123863)
+[PASS] test_RevertWhen_GuardianWithdrawsInheritance() (gas: 439599)
+[FAIL: next call did not revert as expected] test_RevertWhen_HeirApproves() (gas: 173425)
+[PASS] test_RevertWhen_HeirCancelsClaim() (gas: 121820)
+[PASS] test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected() (gas: 3701961)
+[PASS] test_RevertWhen_HeirWithdrawsInheritanceTwice() (gas: 483071)
+[PASS] test_RevertWhen_InactivityPeriodBelowOneDay() (gas: 617356)
+[PASS] test_RevertWhen_MoreThanTenGuardians() (gas: 664585)
+[PASS] test_RevertWhen_MoreThanTenHeirs() (gas: 673664)
+[FAIL: next call did not revert as expected] test_RevertWhen_OwnerApproves() (gas: 175447)
+[PASS] test_RevertWhen_OwnerRejectsEth() (gas: 3474183)
+[PASS] test_RevertWhen_OwnerStartsClaim() (gas: 48438)
+[PASS] test_RevertWhen_OwnerWithdrawsInheritance() (gas: 439643)
+[PASS] test_RevertWhen_PlainTransferAfterDistributed() (gas: 442797)
+[PASS] test_RevertWhen_StartClaimAfterOwnerCheckedIn() (gas: 85543)
+[PASS] test_RevertWhen_StartClaimBeforeInactivityEnds() (gas: 48189)
+[FAIL: next call did not revert as expected] test_RevertWhen_StrangerApproves() (gas: 175469)
+[PASS] test_RevertWhen_StrangerStartsClaim() (gas: 48415)
+[PASS] test_RevertWhen_StrangerWithdrawsInheritance() (gas: 439620)
+[PASS] test_RevertWhen_TimelockPeriodBelowOneDay() (gas: 617346)
+[PASS] test_RevertWhen_UpdateHeirsWithMoreThanTenHeirs() (gas: 123125)
+[PASS] test_UpdateHeirs_RemovedHeirCannotStartClaim() (gas: 130855)
+[PASS] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3551391)
+Suite result: FAILED. 31 passed; 3 failed; 0 skipped; finished in 299.98ms (637.34ms CPU time)
+
+Ran 1 test suite in 301.12ms (299.98ms CPU time): 31 tests passed, 3 failed, 0 skipped (34 total tests)
+
+Failing tests:
+Encountered 3 failing tests in test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[FAIL: next call did not revert as expected] test_RevertWhen_HeirApproves() (gas: 173425)
+[FAIL: next call did not revert as expected] test_RevertWhen_OwnerApproves() (gas: 175447)
+[FAIL: next call did not revert as expected] test_RevertWhen_StrangerApproves() (gas: 175469)
+
+Encountered a total of 3 failing tests, 31 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 3 failed tests
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger
+(exit code 1)

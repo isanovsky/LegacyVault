@@ -1,0 +1,83 @@
+# M12 - Ancaman 4. Klaim keliru
+# Mutasi: Geser batas timelock: < menjadi <=
+
+$ git diff -- src/LegacyVault.sol
+diff --git a/src/LegacyVault.sol b/src/LegacyVault.sol
+index b4b633b..faa44a0 100644
+--- a/src/LegacyVault.sol
++++ b/src/LegacyVault.sol
+@@ -326,7 +326,7 @@ contract LegacyVault is ReentrancyGuard {
+         if (approvalCount < threshold) revert NotEnoughApprovals(approvalCount, threshold);
+         // Sama seperti di startClaim: pergeseran beberapa detik tidak berarti untuk timelock harian.
+         // forge-lint: disable-next-line(block-timestamp)
+-        if (block.timestamp < unlockTime) revert TimelockNotExpired(unlockTime);
++        if (block.timestamp <= unlockTime) revert TimelockNotExpired(unlockTime);
+ 
+         uint256 total = address(this).balance;
+         snapshot = total;
+warning: in the working copy of 'src/LegacyVault.sol', LF will be replaced by CRLF the next time Git touches it
+
+$ forge test --match-path "test/security/*"
+Compiling 2 files with Solc 0.8.28
+Solc 0.8.28 finished in 875.28ms
+Compiler run successful!
+
+Ran 34 tests for test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[PASS] testFuzz_RevertWhen_NonOwnerCallsOwnerFunctions(address) (runs: 1000, μ: 121207, ~: 121207)
+[FAIL: TimelockNotExpired(16156801 [1.615e7]); counterexample: calldata=0x89fd376600000000000001dbcc2103852a8af009d5b246321b23479bb330a31d31e7ae4800000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000030a1c3b21a3 args=[2986628551843168511212102728738964139354313584037878382964296 [2.986e60], 1, 3341958193571 [3.341e12]]] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 0, μ: 0, ~: 0)
+[PASS] test_CancelClaim_DuringTimelockBlocksFinalize() (gas: 382899)
+[PASS] test_CancelClaim_OldApprovalsDoNotCarryOver() (gas: 585686)
+[PASS] test_Deposit_ByStrangerDoesNotCheckIn() (gas: 54898)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_FinalizeClaim_ByAnyoneAtUnlockTime() (gas: 306643)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_DepositAfterDistributed() (gas: 296964)
+[PASS] test_RevertWhen_FinalizeBeforeThreshold() (gas: 206086)
+[PASS] test_RevertWhen_FinalizeBeforeTimelock() (gas: 302970)
+[PASS] test_RevertWhen_FinalizeWithoutApprovals() (gas: 126651)
+[PASS] test_RevertWhen_GuardianApprovesTwice() (gas: 213100)
+[PASS] test_RevertWhen_GuardianCancelsClaim() (gas: 123863)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_GuardianWithdrawsInheritance() (gas: 296964)
+[PASS] test_RevertWhen_HeirApproves() (gas: 124044)
+[PASS] test_RevertWhen_HeirCancelsClaim() (gas: 121820)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected() (gas: 3478389)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_HeirWithdrawsInheritanceTwice() (gas: 297008)
+[PASS] test_RevertWhen_InactivityPeriodBelowOneDay() (gas: 621604)
+[PASS] test_RevertWhen_MoreThanTenGuardians() (gas: 668833)
+[PASS] test_RevertWhen_MoreThanTenHeirs() (gas: 677912)
+[PASS] test_RevertWhen_OwnerApproves() (gas: 126066)
+[PASS] test_RevertWhen_OwnerRejectsEth() (gas: 3499620)
+[PASS] test_RevertWhen_OwnerStartsClaim() (gas: 48438)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_OwnerWithdrawsInheritance() (gas: 297008)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_PlainTransferAfterDistributed() (gas: 296941)
+[PASS] test_RevertWhen_StartClaimAfterOwnerCheckedIn() (gas: 85543)
+[PASS] test_RevertWhen_StartClaimBeforeInactivityEnds() (gas: 48189)
+[PASS] test_RevertWhen_StrangerApproves() (gas: 126088)
+[PASS] test_RevertWhen_StrangerStartsClaim() (gas: 48415)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_StrangerWithdrawsInheritance() (gas: 296985)
+[PASS] test_RevertWhen_TimelockPeriodBelowOneDay() (gas: 621594)
+[PASS] test_RevertWhen_UpdateHeirsWithMoreThanTenHeirs() (gas: 123125)
+[PASS] test_UpdateHeirs_RemovedHeirCannotStartClaim() (gas: 130855)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3311813)
+Suite result: FAILED. 24 passed; 10 failed; 0 skipped; finished in 77.39ms (117.08ms CPU time)
+
+Ran 1 test suite in 78.43ms (77.39ms CPU time): 24 tests passed, 10 failed, 0 skipped (34 total tests)
+
+Failing tests:
+Encountered 10 failing tests in test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[FAIL: TimelockNotExpired(16156801 [1.615e7]); counterexample: calldata=0x89fd376600000000000001dbcc2103852a8af009d5b246321b23479bb330a31d31e7ae4800000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000030a1c3b21a3 args=[2986628551843168511212102728738964139354313584037878382964296 [2.986e60], 1, 3341958193571 [3.341e12]]] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 0, μ: 0, ~: 0)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_FinalizeClaim_ByAnyoneAtUnlockTime() (gas: 306643)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_DepositAfterDistributed() (gas: 296964)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_GuardianWithdrawsInheritance() (gas: 296964)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected() (gas: 3478389)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_HeirWithdrawsInheritanceTwice() (gas: 297008)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_OwnerWithdrawsInheritance() (gas: 297008)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_PlainTransferAfterDistributed() (gas: 296941)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_RevertWhen_StrangerWithdrawsInheritance() (gas: 296985)
+[FAIL: TimelockNotExpired(16156801 [1.615e7])] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3311813)
+
+Encountered a total of 10 failing tests, 24 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 10 failed tests
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger
+
+Fuzz seed: 0x390a4e2e9c0559ae61cfe314e53c9eb8d72236352eeebfa3b02bc084b05a5c54 (use `--fuzz-seed` to reproduce)
+(exit code 1)

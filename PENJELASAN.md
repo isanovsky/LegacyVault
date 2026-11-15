@@ -239,3 +239,140 @@ J: Kontrak mendeteksi duplikat dengan tanda `isHeir`. Jika tanda lama lupa dihap
 
 **T: Apakah angka gas di laporan sama dengan biaya di Ethereum asli?**
 J: Mendekati, tetapi tidak persis. Laporan gas mengukur jumlah unit gas. Biaya dalam rupiah tergantung harga gas saat itu dan harga ETH. Laporan ini berguna untuk membandingkan fungsi mana yang mahal, bukan untuk menghitung tagihan pasti.
+
+---
+
+## Tahap 3: Bukti mitigasi keamanan
+
+### 1. Apa yang dibuat di tahap ini
+
+- **`test/security/LegacyVault.security.t.sol`:** 34 test keamanan, dikelompokkan per baris tabel ancaman di SPEC.md bagian 7. Setiap kelompok diawali komentar yang menyebut ancaman dan mitigasinya. 33 test dipindahkan apa adanya dari file test tahap 2 (dengan skrip, bukan diketik ulang), dan 1 test baru ditambahkan: `updateHeirs` menolak 11 heir.
+- **`test/utils/LegacyVaultFixture.sol`:** konfigurasi dan helper bersama, supaya file test utama dan file test keamanan memakai `setUp` yang sama.
+- **`test/LegacyVault.t.sol`:** sekarang berisi 59 test fungsional.
+
+  Total test menjadi 93 (59 + 34), semuanya lolos. Output asli test keamanan ada di `docs/security-output.txt`.
+- **`docs/MUTATION.md`:** hasil uji perusakan untuk 22 mutasi, satu atau lebih per mitigasi. Output asli setiap mutasi ada di `docs/mutation/M01.txt` sampai `M22.txt`. Semua mutasi dijalankan di branch sementara yang lalu dihapus, dan kode yang dirusak tidak pernah di-commit.
+
+**Hasil uji perusakan:**
+- 19 dari 22 mutasi tertangkap oleh test keamanan.
+- 1 mutasi (M16) hanya tertangkap oleh test fungsional, dan memang tidak berdampak pada keamanan.
+- **2 mutasi tidak tertangkap test mana pun:** membalik urutan Checks-Effects-Interactions (M02) dan menghapus `nonReentrant` (M03).
+
+Penyebab M02 dan M03 lolos dijelaskan di bawah. Ini batasan yang perlu Anda ketahui dan bisa Anda sampaikan ke dosen.
+
+### 2. Konsep yang dipakai
+
+#### Reentrancy (masuk ulang)
+
+Saat kontrak mengirim ETH ke sebuah alamat, dan alamat itu ternyata smart contract, kontrak penerima boleh menjalankan kodenya sendiri **di tengah-tengah** proses pengiriman. Kode itu bisa memanggil balik kontrak pengirim sebelum fungsi pertama selesai. Itulah *reentrancy*.
+
+Bahayanya muncul jika kontrak pengirim **mengirim dulu, baru mencatat**. Diagram berikut menggambarkan versi yang salah (urutan terbalik). Versi ini **tidak** dipakai di LegacyVault.
+
+```mermaid
+sequenceDiagram
+    participant H as Heir (kontrak)
+    participant V as Vault (urutan salah)
+    H->>V: withdrawInheritance()
+    V->>V: cek bagian = 3 ETH
+    V->>H: kirim 3 ETH
+    Note over H: kode penerima berjalan,<br/>bagian di vault masih tercatat 3 ETH
+    H->>V: withdrawInheritance() lagi
+    V->>V: cek bagian = 3 ETH (belum di-nol-kan)
+    V->>H: kirim 3 ETH lagi
+    Note over V: ETH milik heir lain ikut keluar
+    V->>V: baru sekarang bagian = 0
+```
+
+Urutan di LegacyVault, yang memakai Checks-Effects-Interactions dan `nonReentrant`:
+
+```mermaid
+sequenceDiagram
+    participant H as Heir (kontrak)
+    participant V as LegacyVault
+    H->>V: withdrawInheritance()
+    V->>V: nonReentrant: tandai "sedang berjalan"
+    V->>V: Checks: bagian = 3 ETH > 0
+    V->>V: Effects: bagian = 0
+    V->>H: Interactions: kirim 3 ETH
+    H-->>V: withdrawInheritance() lagi
+    V--xH: ditolak oleh nonReentrant
+    Note over V: tanpa nonReentrant pun,<br/>bagian sudah 0 sehingga NothingToWithdraw
+    V->>V: nonReentrant: tandai "selesai"
+```
+
+**Analogi.** Kasir bank memegang daftar nama dan jumlah uang yang boleh diambil.
+- Kasir yang ceroboh menyerahkan uang dulu, baru mencoret nama. Selama kasir masih sibuk menghitung uang di meja, orang yang sama bisa menyerobot antrean dan meminta lagi, dan namanya masih belum dicoret.
+- Kasir yang benar mencoret nama **sebelum** menyerahkan uang (Checks-Effects-Interactions), dan menutup loket selama satu transaksi berjalan (`nonReentrant`).
+
+**Kenapa uji perusakan tidak menangkap M02 dan M03?** Di test, penerima ETH adalah alamat biasa yang tidak menjalankan kode saat menerima ETH. Dalam kondisi itu, urutan "kirim dulu" atau "catat dulu" memberi hasil yang sama, karena tidak ada yang menyerobot. Test membuktikan bahwa bagian heir di-nol-kan dan tidak bisa ditarik dua kali secara berurutan, tetapi tidak bisa membuktikan perlindungan terhadap panggilan ulang di tengah pengiriman. Itu sebabnya ada **dua lapisan**:
+- Jika urutannya terbalik tetapi `nonReentrant` ada, panggilan ulang tetap ditolak.
+- Jika `nonReentrant` hilang tetapi urutannya benar, panggilan ulang menemukan bagian yang sudah 0.
+
+Kontrak baru rentan jika keduanya rusak sekaligus. Untuk dua baris ini, pengamannya adalah tinjauan kode dan komentar di atas fungsi `withdrawInheritance`.
+
+#### DoS (Denial of Service) karena push payment
+
+*Push payment* berarti kontrak mengirim ETH ke semua penerima dalam satu loop. Jika satu pengiriman gagal dan kontrak membatalkan transaksi, **seluruh** loop ikut batal. Satu heir yang alamatnya menolak ETH, baik sengaja maupun karena wallet-nya bermasalah, membuat tidak ada seorang pun yang menerima warisan. Pembagian itu tidak akan pernah berhasil, berapa kali pun dicoba.
+
+Diagram berikut menggambarkan desain push. Desain ini **tidak** dipakai di LegacyVault.
+
+```mermaid
+sequenceDiagram
+    participant X as Siapa saja
+    participant V as Vault (push)
+    participant A as Alice
+    participant B as Bob (menolak ETH)
+    participant C as Carol
+    X->>V: bagikan()
+    V->>A: kirim 5 ETH
+    V->>B: kirim 3 ETH
+    B--xV: ditolak
+    Note over V: seluruh transaksi dibatalkan,<br/>kiriman ke Alice ikut batal,<br/>Carol tidak pernah dikirimi
+```
+
+Desain LegacyVault, dengan pull payment:
+
+```mermaid
+sequenceDiagram
+    participant X as Siapa saja
+    participant V as LegacyVault
+    participant A as Alice
+    participant B as Bob (menolak ETH)
+    participant C as Carol
+    X->>V: finalizeClaim()
+    V->>V: catat: Alice 5, Bob 3, Carol 2 (tanpa kirim)
+    A->>V: withdrawInheritance()
+    V->>A: kirim 5 ETH
+    B->>V: withdrawInheritance()
+    V--xB: TransferFailed (hanya transaksi Bob yang batal)
+    C->>V: withdrawInheritance()
+    V->>C: kirim 2 ETH
+    Note over V: bagian Bob tetap tercatat 3 ETH
+```
+
+**Analogi.**
+- Push payment seperti kurir yang membawa tiga paket dalam satu perjalanan, dengan aturan "kalau satu paket ditolak, semua paket dibawa pulang". Satu penerima yang tidak mau membuka pintu membuat dua penerima lain tidak dapat paket.
+- Pull payment seperti loket pengambilan: paket disiapkan atas nama masing-masing, dan setiap orang datang mengambil sendiri. Satu orang yang tidak datang tidak mengganggu orang lain.
+
+Test `test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected` membuktikan hal ini. Mutasi M04 juga menunjukkan kenapa hasil `call` wajib dicek: tanpa pemeriksaan itu, bagian Bob akan di-nol-kan padahal ETH-nya tidak pernah sampai.
+
+#### Uji perusakan (mutation check)
+
+Caranya, kontrak sengaja dirusak satu baris, lalu test dijalankan. Jika test gagal, test itu terbukti menjaga baris tersebut. Jika test tetap hijau, ada celah, dan celah itu harus dicatat dengan jujur, seperti M02 dan M03. Analoginya menguji alarm rumah dengan sengaja membuka jendela: alarm yang tidak berbunyi berarti ada jendela yang tidak dijaga.
+
+### 3. Pertanyaan yang mungkin diajukan dosen
+
+**T: Kenapa tidak membuat kontrak penyerang untuk membuktikan perlindungan reentrancy?**
+J: Proyek ini sengaja tidak memuat kode penyerang. Sebagai gantinya, perlindungan dibuktikan dengan tiga cara. Pertama, test menunjukkan bagian heir di-nol-kan dan tidak bisa ditarik dua kali. Kedua, kontrak memakai dua lapisan yang saling menutupi (CEI dan `nonReentrant`). Ketiga, uji perusakan dilaporkan apa adanya: dua mutasi itu tidak tertangkap, beserta alasannya.
+
+**T: Jika sudah ada `nonReentrant`, kenapa masih perlu Checks-Effects-Interactions?**
+J: Pertahanan berlapis. `nonReentrant` hanya melindungi fungsi yang memakainya. CEI adalah kebiasaan menulis kode yang tetap aman walaupun suatu hari modifier itu terhapus atau ada fungsi baru yang lupa diberi modifier. Uji perusakan menunjukkan bahwa menghapus salah satu lapisan saja tidak langsung membuat kontrak rentan.
+
+**T: Kenapa M16 tidak dianggap celah keamanan?**
+J: Hitungan persetujuan juga di-reset di `startClaim`, dan klaim baru adalah satu-satunya jalan menuju pencairan. Jadi angka lama hanya terlihat di `getStatus()` selama vault kembali Active, dan tidak bisa dipakai untuk mencairkan dana. Test fungsional tetap menangkapnya supaya tampilan UI tidak menyesatkan.
+
+**T: Apa yang terjadi pada bagian heir yang alamatnya menolak ETH?**
+J: Bagiannya tetap tercatat di `inheritanceOf` dan tidak hilang. ETH-nya tertahan di kontrak sampai alamat itu bisa menerima ETH. Jika alamat itu tidak akan pernah bisa menerima ETH, bagian itu terkunci. Ini risiko yang ditanggung heir tersebut sendiri, bukan heir lain.
+
+**T: Bagaimana jika pemilik lupa check-in dan klaim sudah disetujui guardian?**
+J: Pemilik masih punya waktu sepanjang timelock (7 hari dalam konfigurasi test) untuk memanggil `cancelClaim`. Test `test_CancelClaim_DuringTimelockBlocksFinalize` membuktikan bahwa setelah pembatalan, klaim tidak bisa difinalisasi, dan klaim baru juga tidak bisa langsung dimulai karena pembatalan dihitung sebagai check-in.

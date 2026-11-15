@@ -1,0 +1,74 @@
+# M08 - Ancaman 3. Akses
+# Mutasi: Hapus onlyHeir dari withdrawInheritance
+
+$ git diff -- src/LegacyVault.sol
+diff --git a/src/LegacyVault.sol b/src/LegacyVault.sol
+index b4b633b..c373009 100644
+--- a/src/LegacyVault.sol
++++ b/src/LegacyVault.sol
+@@ -349,7 +349,7 @@ contract LegacyVault is ReentrancyGuard {
+     /// @notice Heir menarik bagian warisannya sendiri.
+     /// @dev Saldo bagian di-nol-kan sebelum ETH dikirim (Checks-Effects-Interactions), ditambah
+     ///      nonReentrant, sehingga heir tidak bisa menarik dua kali lewat serangan reentrancy.
+-    function withdrawInheritance() external nonReentrant onlyHeir inState(State.Distributed) {
++    function withdrawInheritance() external nonReentrant inState(State.Distributed) {
+         uint256 amount = inheritanceOf[msg.sender];
+         if (amount == 0) revert NothingToWithdraw();
+ 
+warning: in the working copy of 'src/LegacyVault.sol', LF will be replaced by CRLF the next time Git touches it
+
+$ forge test --match-path "test/security/*"
+Compiling 3 files with Solc 0.8.28
+Solc 0.8.28 finished in 767.62ms
+Compiler run successful!
+
+Ran 34 tests for test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[PASS] testFuzz_RevertWhen_NonOwnerCallsOwnerFunctions(address) (runs: 1000, μ: 121207, ~: 121207)
+[PASS] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 1000, μ: 3986932, ~: 4049478)
+[PASS] test_CancelClaim_DuringTimelockBlocksFinalize() (gas: 382899)
+[PASS] test_CancelClaim_OldApprovalsDoNotCarryOver() (gas: 585686)
+[PASS] test_Deposit_ByStrangerDoesNotCheckIn() (gas: 54898)
+[PASS] test_FinalizeClaim_ByAnyoneAtUnlockTime() (gas: 461772)
+[PASS] test_RevertWhen_DepositAfterDistributed() (gas: 446935)
+[PASS] test_RevertWhen_FinalizeBeforeThreshold() (gas: 206086)
+[PASS] test_RevertWhen_FinalizeBeforeTimelock() (gas: 302973)
+[PASS] test_RevertWhen_FinalizeWithoutApprovals() (gas: 126651)
+[PASS] test_RevertWhen_GuardianApprovesTwice() (gas: 213100)
+[PASS] test_RevertWhen_GuardianCancelsClaim() (gas: 123863)
+[FAIL: Error != expected error: NothingToWithdraw() != NotHeir()] test_RevertWhen_GuardianWithdrawsInheritance() (gas: 446280)
+[PASS] test_RevertWhen_HeirApproves() (gas: 124044)
+[PASS] test_RevertWhen_HeirCancelsClaim() (gas: 121820)
+[PASS] test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected() (gas: 3699746)
+[PASS] test_RevertWhen_HeirWithdrawsInheritanceTwice() (gas: 483071)
+[PASS] test_RevertWhen_InactivityPeriodBelowOneDay() (gas: 617386)
+[PASS] test_RevertWhen_MoreThanTenGuardians() (gas: 664615)
+[PASS] test_RevertWhen_MoreThanTenHeirs() (gas: 673694)
+[PASS] test_RevertWhen_OwnerApproves() (gas: 126066)
+[PASS] test_RevertWhen_OwnerRejectsEth() (gas: 3474183)
+[PASS] test_RevertWhen_OwnerStartsClaim() (gas: 48438)
+[FAIL: Error != expected error: NothingToWithdraw() != NotHeir()] test_RevertWhen_OwnerWithdrawsInheritance() (gas: 446324)
+[PASS] test_RevertWhen_PlainTransferAfterDistributed() (gas: 447275)
+[PASS] test_RevertWhen_StartClaimAfterOwnerCheckedIn() (gas: 85543)
+[PASS] test_RevertWhen_StartClaimBeforeInactivityEnds() (gas: 48189)
+[PASS] test_RevertWhen_StrangerApproves() (gas: 126088)
+[PASS] test_RevertWhen_StrangerStartsClaim() (gas: 48415)
+[FAIL: Error != expected error: NothingToWithdraw() != NotHeir()] test_RevertWhen_StrangerWithdrawsInheritance() (gas: 446301)
+[PASS] test_RevertWhen_TimelockPeriodBelowOneDay() (gas: 617376)
+[PASS] test_RevertWhen_UpdateHeirsWithMoreThanTenHeirs() (gas: 123125)
+[PASS] test_UpdateHeirs_RemovedHeirCannotStartClaim() (gas: 130855)
+[PASS] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3549164)
+Suite result: FAILED. 31 passed; 3 failed; 0 skipped; finished in 295.77ms (628.93ms CPU time)
+
+Ran 1 test suite in 296.82ms (295.77ms CPU time): 31 tests passed, 3 failed, 0 skipped (34 total tests)
+
+Failing tests:
+Encountered 3 failing tests in test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[FAIL: Error != expected error: NothingToWithdraw() != NotHeir()] test_RevertWhen_GuardianWithdrawsInheritance() (gas: 446280)
+[FAIL: Error != expected error: NothingToWithdraw() != NotHeir()] test_RevertWhen_OwnerWithdrawsInheritance() (gas: 446324)
+[FAIL: Error != expected error: NothingToWithdraw() != NotHeir()] test_RevertWhen_StrangerWithdrawsInheritance() (gas: 446301)
+
+Encountered a total of 3 failing tests, 31 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 3 failed tests
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger
+(exit code 1)

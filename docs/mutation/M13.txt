@@ -1,0 +1,76 @@
+# M13 - Ancaman 4. Klaim keliru
+# Mutasi: Hapus onlyOwner dari cancelClaim
+
+$ git diff -- src/LegacyVault.sol
+diff --git a/src/LegacyVault.sol b/src/LegacyVault.sol
+index b4b633b..da0cde6 100644
+--- a/src/LegacyVault.sol
++++ b/src/LegacyVault.sol
+@@ -272,7 +272,7 @@ contract LegacyVault is ReentrancyGuard {
+     /// @notice Owner membatalkan klaim yang sedang berjalan, misalnya karena ia ternyata masih hidup.
+     /// @dev Persetujuan lama tidak perlu dihapus satu per satu: klaim berikutnya memakai claimId baru,
+     ///      sehingga isi hasApproved untuk claimId lama tidak lagi dibaca.
+-    function cancelClaim() external onlyOwner inState(State.Claiming) {
++    function cancelClaim() external inState(State.Claiming) {
+         uint256 cancelledId = claimId;
+ 
+         state = State.Active;
+warning: in the working copy of 'src/LegacyVault.sol', LF will be replaced by CRLF the next time Git touches it
+
+$ forge test --match-path "test/security/*"
+Compiling 3 files with Solc 0.8.28
+Solc 0.8.28 finished in 758.31ms
+Compiler run successful!
+
+Ran 34 tests for test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[FAIL: Error != expected error: InvalidState(1, 0) != NotOwner(); counterexample: calldata=0x17c9c18f0000000000000000000000004b200e323741c9535cb64781e90a421644bd493c args=[0x4B200e323741c9535Cb64781e90A421644bD493c]] testFuzz_RevertWhen_NonOwnerCallsOwnerFunctions(address) (runs: 0, μ: 0, ~: 0)
+[PASS] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 1000, μ: 4034106, ~: 4063178)
+[PASS] test_CancelClaim_DuringTimelockBlocksFinalize() (gas: 382871)
+[PASS] test_CancelClaim_OldApprovalsDoNotCarryOver() (gas: 585658)
+[PASS] test_Deposit_ByStrangerDoesNotCheckIn() (gas: 54898)
+[PASS] test_FinalizeClaim_ByAnyoneAtUnlockTime() (gas: 461772)
+[PASS] test_RevertWhen_DepositAfterDistributed() (gas: 446935)
+[PASS] test_RevertWhen_FinalizeBeforeThreshold() (gas: 206086)
+[PASS] test_RevertWhen_FinalizeBeforeTimelock() (gas: 302973)
+[PASS] test_RevertWhen_FinalizeWithoutApprovals() (gas: 126651)
+[PASS] test_RevertWhen_GuardianApprovesTwice() (gas: 213100)
+[FAIL: next call did not revert as expected] test_RevertWhen_GuardianCancelsClaim() (gas: 143021)
+[PASS] test_RevertWhen_GuardianWithdrawsInheritance() (gas: 444077)
+[PASS] test_RevertWhen_HeirApproves() (gas: 124044)
+[FAIL: next call did not revert as expected] test_RevertWhen_HeirCancelsClaim() (gas: 140978)
+[PASS] test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected() (gas: 3705636)
+[PASS] test_RevertWhen_HeirWithdrawsInheritanceTwice() (gas: 487549)
+[PASS] test_RevertWhen_InactivityPeriodBelowOneDay() (gas: 617864)
+[PASS] test_RevertWhen_MoreThanTenGuardians() (gas: 665093)
+[PASS] test_RevertWhen_MoreThanTenHeirs() (gas: 674172)
+[PASS] test_RevertWhen_OwnerApproves() (gas: 126066)
+[PASS] test_RevertWhen_OwnerRejectsEth() (gas: 3473166)
+[PASS] test_RevertWhen_OwnerStartsClaim() (gas: 48438)
+[PASS] test_RevertWhen_OwnerWithdrawsInheritance() (gas: 444121)
+[PASS] test_RevertWhen_PlainTransferAfterDistributed() (gas: 447275)
+[PASS] test_RevertWhen_StartClaimAfterOwnerCheckedIn() (gas: 85543)
+[PASS] test_RevertWhen_StartClaimBeforeInactivityEnds() (gas: 48189)
+[PASS] test_RevertWhen_StrangerApproves() (gas: 126088)
+[PASS] test_RevertWhen_StrangerStartsClaim() (gas: 48415)
+[PASS] test_RevertWhen_StrangerWithdrawsInheritance() (gas: 444098)
+[PASS] test_RevertWhen_TimelockPeriodBelowOneDay() (gas: 617854)
+[PASS] test_RevertWhen_UpdateHeirsWithMoreThanTenHeirs() (gas: 123125)
+[PASS] test_UpdateHeirs_RemovedHeirCannotStartClaim() (gas: 130855)
+[PASS] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3555054)
+Suite result: FAILED. 31 passed; 3 failed; 0 skipped; finished in 215.51ms (455.44ms CPU time)
+
+Ran 1 test suite in 216.56ms (215.51ms CPU time): 31 tests passed, 3 failed, 0 skipped (34 total tests)
+
+Failing tests:
+Encountered 3 failing tests in test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[FAIL: Error != expected error: InvalidState(1, 0) != NotOwner(); counterexample: calldata=0x17c9c18f0000000000000000000000004b200e323741c9535cb64781e90a421644bd493c args=[0x4B200e323741c9535Cb64781e90A421644bD493c]] testFuzz_RevertWhen_NonOwnerCallsOwnerFunctions(address) (runs: 0, μ: 0, ~: 0)
+[FAIL: next call did not revert as expected] test_RevertWhen_GuardianCancelsClaim() (gas: 143021)
+[FAIL: next call did not revert as expected] test_RevertWhen_HeirCancelsClaim() (gas: 140978)
+
+Encountered a total of 3 failing tests, 31 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 3 failed tests
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger
+
+Fuzz seed: 0xa589421b4eda4e66b4a084ac2fc4b6a2631d8efa1e72f8d16d047f920d1514da (use `--fuzz-seed` to reproduce)
+(exit code 1)

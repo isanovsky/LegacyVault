@@ -1,0 +1,72 @@
+# M21 - Ancaman 9. ETH setelah Distributed
+# Mutasi: Hapus inState(State.Active) dari receive
+
+$ git diff -- src/LegacyVault.sol
+diff --git a/src/LegacyVault.sol b/src/LegacyVault.sol
+index b4b633b..f4f98b6 100644
+--- a/src/LegacyVault.sol
++++ b/src/LegacyVault.sol
+@@ -217,7 +217,7 @@ contract LegacyVault is ReentrancyGuard {
+ 
+     /// @notice Menerima ETH yang dikirim langsung ke alamat kontrak.
+     /// @dev Ditolak di luar Active supaya ETH tidak masuk setelah pembagian dan terkunci selamanya.
+-    receive() external payable inState(State.Active) {
++    receive() external payable {
+         _deposit();
+     }
+ 
+warning: in the working copy of 'src/LegacyVault.sol', LF will be replaced by CRLF the next time Git touches it
+
+$ forge test --match-path "test/security/*"
+Compiling 3 files with Solc 0.8.28
+Solc 0.8.28 finished in 860.16ms
+Compiler run successful!
+
+Ran 34 tests for test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[PASS] testFuzz_RevertWhen_NonOwnerCallsOwnerFunctions(address) (runs: 1000, μ: 121207, ~: 121207)
+[PASS] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 1000, μ: 3996081, ~: 4061408)
+[PASS] test_CancelClaim_DuringTimelockBlocksFinalize() (gas: 382899)
+[PASS] test_CancelClaim_OldApprovalsDoNotCarryOver() (gas: 585686)
+[PASS] test_Deposit_ByStrangerDoesNotCheckIn() (gas: 54898)
+[PASS] test_FinalizeClaim_ByAnyoneAtUnlockTime() (gas: 461772)
+[PASS] test_RevertWhen_DepositAfterDistributed() (gas: 446935)
+[PASS] test_RevertWhen_FinalizeBeforeThreshold() (gas: 206086)
+[PASS] test_RevertWhen_FinalizeBeforeTimelock() (gas: 302973)
+[PASS] test_RevertWhen_FinalizeWithoutApprovals() (gas: 126651)
+[PASS] test_RevertWhen_GuardianApprovesTwice() (gas: 213100)
+[PASS] test_RevertWhen_GuardianCancelsClaim() (gas: 123863)
+[PASS] test_RevertWhen_GuardianWithdrawsInheritance() (gas: 444077)
+[PASS] test_RevertWhen_HeirApproves() (gas: 124044)
+[PASS] test_RevertWhen_HeirCancelsClaim() (gas: 121820)
+[PASS] test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected() (gas: 3704947)
+[PASS] test_RevertWhen_HeirWithdrawsInheritanceTwice() (gas: 487549)
+[PASS] test_RevertWhen_InactivityPeriodBelowOneDay() (gas: 617134)
+[PASS] test_RevertWhen_MoreThanTenGuardians() (gas: 664363)
+[PASS] test_RevertWhen_MoreThanTenHeirs() (gas: 673442)
+[PASS] test_RevertWhen_OwnerApproves() (gas: 126066)
+[PASS] test_RevertWhen_OwnerRejectsEth() (gas: 3472781)
+[PASS] test_RevertWhen_OwnerStartsClaim() (gas: 48438)
+[PASS] test_RevertWhen_OwnerWithdrawsInheritance() (gas: 444121)
+[FAIL: assertion failed] test_RevertWhen_PlainTransferAfterDistributed() (gas: 444718)
+[PASS] test_RevertWhen_StartClaimAfterOwnerCheckedIn() (gas: 85543)
+[PASS] test_RevertWhen_StartClaimBeforeInactivityEnds() (gas: 48189)
+[PASS] test_RevertWhen_StrangerApproves() (gas: 126088)
+[PASS] test_RevertWhen_StrangerStartsClaim() (gas: 48415)
+[PASS] test_RevertWhen_StrangerWithdrawsInheritance() (gas: 444098)
+[PASS] test_RevertWhen_TimelockPeriodBelowOneDay() (gas: 617124)
+[PASS] test_RevertWhen_UpdateHeirsWithMoreThanTenHeirs() (gas: 123125)
+[PASS] test_UpdateHeirs_RemovedHeirCannotStartClaim() (gas: 130855)
+[PASS] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3554377)
+Suite result: FAILED. 33 passed; 1 failed; 0 skipped; finished in 324.95ms (690.02ms CPU time)
+
+Ran 1 test suite in 325.88ms (324.95ms CPU time): 33 tests passed, 1 failed, 0 skipped (34 total tests)
+
+Failing tests:
+Encountered 1 failing test in test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[FAIL: assertion failed] test_RevertWhen_PlainTransferAfterDistributed() (gas: 444718)
+
+Encountered a total of 1 failing tests, 33 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 1 failed test
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger
+(exit code 1)
