@@ -17,3 +17,11 @@ remappings = [
 [fuzz]
 # Jumlah input acak per fuzz test. Bawaan forge 256; dinaikkan agar pembagian porsi diuji lebih banyak kombinasi.
 runs = 1000
+
+# Alamat RPC dan API key dibaca dari .env (tidak ditulis langsung di sini supaya tidak ter-commit).
+# Dipakai dengan `--rpc-url sepolia` dan `--verify`. Lihat docs/DEPLOY.md.
+[rpc_endpoints]
+sepolia = "${SEPOLIA_RPC_URL}"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }

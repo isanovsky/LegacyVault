@@ -376,3 +376,86 @@ J: Bagiannya tetap tercatat di `inheritanceOf` dan tidak hilang. ETH-nya tertaha
 
 **T: Bagaimana jika pemilik lupa check-in dan klaim sudah disetujui guardian?**
 J: Pemilik masih punya waktu sepanjang timelock (7 hari dalam konfigurasi test) untuk memanggil `cancelClaim`. Test `test_CancelClaim_DuringTimelockBlocksFinalize` membuktikan bahwa setelah pembatalan, klaim tidak bisa difinalisasi, dan klaim baru juga tidak bisa langsung dimulai karena pembatalan dihitung sebagai check-in.
+
+---
+
+## Tahap 4: Skrip deploy
+
+### 1. Apa yang dibuat di tahap ini
+
+| File | Fungsi |
+|---|---|
+| `script/Deploy.s.sol` | Deploy LegacyVault dengan konfigurasi dari environment variable (file `.env`). Bisa untuk Anvil maupun Sepolia. |
+| `script/SeedDemo.s.sol` | Khusus Anvil. Deploy vault dengan tokoh demo, lalu Pak Icanov menyetor 10 ETH. |
+| `script/AnvilAccounts.sol` | Daftar 10 alamat akun bawaan Anvil, dipakai bersama oleh kedua skrip. |
+| `script/export-contract.mjs` | Menyalin alamat kontrak dan ABI ke `ui/src/contract.json` setelah deploy lokal. |
+| `package.json` | Perintah `npm run anvil`, `npm run deploy-local`, `npm run seed`. |
+| `.env.example` | Contoh isi `.env`, tanpa rahasia. |
+| `docs/DEPLOY.md` | Panduan lengkap deploy lokal dan Sepolia. |
+| `test/script/Scripts.t.sol` | 7 test untuk kedua skrip. |
+| `foundry.toml` | Ditambah `[rpc_endpoints]` dan `[etherscan]` untuk Sepolia. Nilainya diambil dari `.env`. |
+
+Tokoh demo yang dibuat `npm run seed`:
+
+| Akun Anvil | Tokoh | Peran |
+|---|---|---|
+| 0 | Pak Icanov | Owner, menyetor 10 ETH |
+| 1 | Mas Kevin | Heir 60% |
+| 2 | Mas Murni | Heir 40% |
+| 3 | Mas Barrok | Guardian |
+| 4 | Notaris Budi | Guardian |
+| 5 | Pak RT Wowo | Guardian |
+
+Konfigurasinya: threshold 2, masa tidak aktif 180 hari, timelock 7 hari.
+
+**Keputusan yang perlu Anda ketahui:**
+- **`package.json`, bukan `Makefile`.** Program `make` tidak terpasang di Windows Anda, sedangkan Node.js sudah ada. Jadi perintahnya `npm run anvil`, `npm run deploy-local`, dan `npm run seed`.
+- **Tidak ada private key akun Anvil di repo.** Anvil "membuka" akun-akun bawaannya, sehingga forge bisa mengirim transaksi atas nama akun itu cukup dengan menyebut alamatnya (`--unlocked --sender`), tanpa private key.
+- **`npm run seed` men-deploy vault demo sendiri,** tidak memakai vault dari `deploy-local`. Untuk demo, cukup jalankan `npm run anvil` lalu `npm run seed`, tanpa perlu membuat `.env`.
+- **`Deploy.s.sol` menolak akun Anvil di luar jaringan lokal.** Jika chainId bukan 31337 dan owner, heir, atau guardian masih memakai alamat akun Anvil, deploy dibatalkan dengan error `AnvilAccountOnPublicChain`. Ini mencegah kesalahan menyalin `.env.example` apa adanya ke Sepolia.
+- **Deploy ke Sepolia belum dijalankan.** Panduannya ada di `docs/DEPLOY.md`.
+
+**Yang sudah diuji sungguhan di Anvil, bukan hanya di test:**
+1. `npm run anvil`: 10 alamat akun yang dicetak Anvil sama persis dengan isi `script/AnvilAccounts.sol`.
+2. `npm run seed`: vault demo berada di `0x5FbDB2315678afecb367f032d93F642f64180aa3`, dan `cast` membaca saldo 10 ETH, owner Pak Icanov, heir pertama Mas Kevin dengan porsi 6000, threshold 2, state Active.
+3. `npm run deploy-local` dengan `.env` hasil salinan `.env.example`: berhasil.
+4. Mas Kevin mencoba `startClaim` dengan `cast send`. Sebelum waktu dimajukan, klaim ditolak dengan error `OwnerStillActive`. Setelah `evm_increaseTime` 180 hari, klaim berhasil, state menjadi Claiming, dan `claimId` menjadi 1.
+
+Total test sekarang 100 (59 fungsional, 34 keamanan, 7 skrip), semuanya lolos.
+
+### 2. Konsep yang dipakai
+
+**Deploy.** Memasang kontrak ke blockchain. Secara teknis, deploy adalah transaksi khusus yang berisi bytecode kontrak dan argumen constructor. Setelah transaksi itu masuk blok, kontrak punya alamat sendiri dan kodenya tidak bisa diubah lagi. Analoginya mencetak buku: setelah naik cetak, isinya tidak bisa diedit, dan kalau ada salah, harus terbit edisi baru di alamat baru.
+
+**Skrip forge (`forge script`).** Program Solidity yang menjalankan langkah-langkah deploy. Forge selalu menjalankan skrip sebagai simulasi lebih dulu. Hanya dengan tanda `--broadcast` transaksinya benar-benar dikirim ke jaringan. Analoginya gladi resik sebelum acara sungguhan.
+
+**Environment variable dan `.env`.** Konfigurasi (siapa heir, berapa porsinya) dan rahasia (private key) disimpan di luar kode, di file `.env` yang tidak masuk Git. Kode yang sama bisa dipakai untuk Anvil dan Sepolia hanya dengan isi `.env` yang berbeda. Analoginya formulir kosong (kode) yang diisi berbeda untuk setiap orang (`.env`). Formulir boleh difotokopi dan dibagikan, tetapi isian pribadinya tidak.
+
+**Chain ID.** Nomor pengenal jaringan blockchain: Anvil 31337, Sepolia 11155111, Ethereum mainnet 1. Skrip dan nantinya UI memeriksa nomor ini untuk memastikan sedang berada di jaringan yang benar, sama seperti memeriksa nomor rekening sebelum mentransfer.
+
+**Kenapa akun Anvil berbahaya di jaringan publik?** Anvil membuat akun dari kalimat sandi (*mnemonic*) yang sama di semua komputer di dunia, dan private key-nya dicetak di layar setiap kali Anvil dinyalakan. Ada program otomatis yang terus memantau alamat-alamat ini di jaringan publik dan langsung menguras ETH yang masuk. Kalau alamat Anvil dijadikan heir di Sepolia atau mainnet, orang asing bisa mengklaim warisan atas nama heir itu.
+
+**ABI (Application Binary Interface).** Daftar fungsi, event, dan error sebuah kontrak, dalam format JSON. UI membutuhkan ABI untuk tahu cara memanggil `startClaim()` atau membaca `getStatus()`, seperti buku menu yang menjelaskan apa saja yang bisa dipesan dan bagaimana cara memesannya. `ui/src/contract.json` berisi ABI dan alamat kontrak, jadi UI tahu restoran mana yang didatangi dan menu apa yang tersedia.
+
+**Faucet.** Situs yang membagikan ETH testnet gratis supaya orang bisa mencoba jaringan publik tanpa membayar. ETH testnet tidak punya nilai uang.
+
+**Verifikasi kontrak.** Yang tersimpan di blockchain hanya bytecode, yang tidak bisa dibaca manusia. Verifikasi mengunggah kode Solidity ke Etherscan. Etherscan lalu meng-compile ulang dan mencocokkan hasilnya dengan bytecode di blockchain. Jika cocok, siapa pun bisa membaca kode aslinya dan yakin bahwa kode itulah yang berjalan. Untuk kontrak warisan, ini penting: keluarga dan guardian bisa memeriksa aturannya sendiri.
+
+**Memajukan waktu di Anvil.** `evm_increaseTime` adalah fitur khusus Anvil untuk memajukan jam blockchain, mirip `vm.warp` di test. Jaringan publik tidak punya fitur ini, karena waktu di sana mengikuti jam sungguhan.
+
+### 3. Pertanyaan yang mungkin diajukan dosen
+
+**T: Kenapa private key tidak ditulis di kode atau di `package.json`?**
+J: Semua yang masuk Git bisa dibaca orang lain, terutama jika repositorinya diunggah ke GitHub. Private key testnet disimpan di `.env` yang ada di `.gitignore`. Untuk Anvil, tidak ada private key sama sekali: akun Anvil sudah terbuka, sehingga cukup menyebut alamatnya.
+
+**T: Bagaimana Anda tahu alamat akun Anvil di skrip benar?**
+J: Ada dua lapis pemeriksaan. Pertama, compiler Solidity menolak alamat yang checksum huruf besar-kecilnya salah, jadi salah ketik satu karakter akan ketahuan saat compile. Kedua, daftar alamat yang dicetak Anvil dicocokkan dengan isi `script/AnvilAccounts.sol`, dan kesepuluhnya sama.
+
+**T: Kenapa alamat kontrak demo selalu `0x5FbDB...`?**
+J: Alamat kontrak dihitung dari alamat pengirim dan nomor urut transaksinya (*nonce*). Di Anvil yang baru dinyalakan, Pak Icanov (akun 0) selalu mengirim transaksi pertamanya dengan nonce 0, sehingga alamatnya selalu sama. Di Sepolia, nonce wallet Anda berbeda, jadi alamatnya juga berbeda.
+
+**T: Kenapa harus simulasi dulu sebelum deploy ke Sepolia?**
+J: Transaksi yang sudah dikirim tidak bisa ditarik kembali, dan biayanya tetap terpakai walaupun transaksinya gagal. Simulasi menunjukkan error konfigurasi lebih dulu (porsi tidak 10000, alamat Anvil tertinggal, saldo kurang) tanpa biaya.
+
+**T: Apakah kontrak di Sepolia sama dengan yang diuji?**
+J: Ya. Skrip deploy memakai hasil kompilasi yang sama dengan test, yaitu compiler 0.8.28 yang dikunci di `foundry.toml`. Verifikasi Etherscan membuktikannya secara publik: Etherscan meng-compile ulang kode sumber dan mencocokkan hasilnya dengan bytecode di Sepolia.
