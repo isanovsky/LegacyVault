@@ -57,6 +57,13 @@ contract LegacyVaultTest is LegacyVaultFixture {
         assertEq(minimal.timelockPeriod(), 1 days);
     }
 
+    function test_Constructor_AcceptsPeriodsOfExactlyTenYears() public {
+        LegacyVault longest =
+            _deploy(_defaultHeirs(), _defaultShares(), _defaultGuardians(), THRESHOLD, 3650 days, 3650 days);
+        assertEq(longest.inactivityPeriod(), longest.MAX_PERIOD());
+        assertEq(longest.timelockPeriod(), longest.MAX_PERIOD());
+    }
+
     function test_RevertWhen_SharesSumBelow10000() public {
         uint256[] memory shares = _defaultShares();
         shares[2] = 1999;

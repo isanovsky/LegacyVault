@@ -105,7 +105,7 @@ Setoran dari selain owner tidak dihitung sebagai check-in, sehingga pihak lain t
 
 ### Ancaman 6: Manipulasi `block.timestamp`
 
-**Mitigasi.** Semua periode minimal 1 hari (`MIN_PERIOD`). Pembahasan lengkapnya ada di [bagian 2](#2-kenapa-blocktimestamp-aman-di-konteks-ini).
+**Mitigasi.** Semua periode minimal 1 hari (`MIN_PERIOD`). Pembahasan lengkapnya ada di [bagian 2](#2-kenapa-blocktimestamp-aman-di-konteks-ini). Sejak tahap 7, periode juga dibatasi maksimal 3650 hari (`MAX_PERIOD`); lihat temuan L-1 di bawah.
 
 **Bukti.**
 
@@ -149,6 +149,23 @@ Test hanya membuktikan bahwa batas 1 hari ditegakkan. Bahwa batas itu *cukup* ad
 - Uji perusakan M21 dan M22 tertangkap.
 
 Mitigasi ini hanya berlaku untuk ETH yang masuk lewat `receive` atau `deposit`. ETH yang dipaksa masuk tetap mungkin; lihat [bagian 3](#3-risiko-yang-diterima).
+
+### Tambahan dari review tahap 7: periode raksasa (temuan L-1)
+
+**Ancaman.** Dulu tidak ada batas atas periode. Jika deployer mengisi angka raksasa, penjumlahan waktu meluap:
+- `getStatus` dan `startClaim` selalu gagal;
+- `approveClaim` yang mencapai threshold selalu gagal, sehingga klaim tertahan dan dana terkunci.
+
+Rinciannya dan bukti sebelum perbaikan ada di [REVIEW.md](REVIEW.md).
+
+**Mitigasi.** `MAX_PERIOD = 3650 days`, dicek di constructor. Periode yang lebih panjang ditolak dengan `PeriodTooLong`.
+
+**Bukti.**
+
+- [S] `test_RevertWhen_InactivityPeriodAboveTenYears`, `test_RevertWhen_TimelockPeriodAboveTenYears`, `test_RevertWhen_PeriodsAreUint256Max`.
+- [S] `test_MaxPeriods_ClaimFlowCompletesWithoutOverflow`: dengan periode terpanjang yang diizinkan, `getStatus` bekerja dan klaim selesai sampai `Distributed`.
+- [U] `test_Constructor_AcceptsPeriodsOfExactlyTenYears`.
+- Uji perusakan M23 (menghapus pemeriksaan batas atas) tertangkap oleh 3 test.
 
 ### Tambahan di luar tabel SPEC: akun Anvil di jaringan publik
 
@@ -203,6 +220,8 @@ Risiko berikut tercantum di SPEC.md bagian 7 sebagai risiko yang tidak dimitigas
 | ETH dipaksa masuk setelah `Distributed` (misalnya lewat `selfdestruct` dari kontrak lain) | ETH itu terkunci selamanya, karena snapshot sudah diambil dan tidak ada fungsi untuk menariknya | Hanya `receive` dan `deposit` yang ditolak | Penolakan `receive` dan `deposit` diuji (Ancaman 9). Pemaksaan lewat `selfdestruct` tidak diuji. |
 | Data heir, guardian, dan porsi terlihat publik | Siapa pun bisa melihat siapa ahli waris dan berapa bagiannya | Tidak ada; ini sifat blockchain publik | Tidak relevan untuk test |
 | Owner tidak bisa mengganti guardian | Jika guardian harus diganti, owner perlu menarik dana dan men-deploy vault baru | Tidak ada fungsi penggantian guardian (disederhanakan) | Tidak ada fungsi, jadi tidak ada test |
+| Heir tidak bisa menerima ETH (temuan L-2, tahap 7) | Bagian heir itu terkunci selamanya | Pull payment, jadi heir lain tidak terdampak | Ya: `test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected` [S] menunjukkan bagiannya tetap tercatat tanpa jalan keluar, sementara heir lain bisa menarik |
+| Heir kehilangan private key (tahap 7) | Bagian heir itu terkunci selamanya | Tidak ada; tidak bisa dicegah tanpa pihak ketiga yang dipercaya | Tidak relevan untuk test |
 
 ## 4. Batasan analisis ini
 

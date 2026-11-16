@@ -496,4 +496,74 @@ contract LegacyVaultSecurityTest is LegacyVaultFixture {
         assertFalse(success);
         assertEq(returnData, _invalidState(LegacyVault.State.Active, LegacyVault.State.Distributed));
     }
+
+    // =====================================================================
+    // Temuan L-1 (review tahap 7). Periode raksasa membuat penjumlahan waktu meluap
+    // Sebelum perbaikan: inactivityPeriod = type(uint256).max membuat getStatus dan startClaim
+    // selalu panic; timelockPeriod = type(uint256).max membuat persetujuan yang mencapai threshold
+    // selalu panic, sehingga klaim tertahan dan dana terkunci.
+    // Mitigasi: periode maksimal MAX_PERIOD (3650 hari), dicek di constructor.
+    // =====================================================================
+
+    function test_RevertWhen_InactivityPeriodAboveTenYears() public {
+        _expectDeployRevert(
+            abi.encodeWithSelector(LegacyVault.PeriodTooLong.selector, 3650 days + 1),
+            _defaultHeirs(),
+            _defaultShares(),
+            _defaultGuardians(),
+            THRESHOLD,
+            3650 days + 1,
+            TIMELOCK
+        );
+    }
+
+    function test_RevertWhen_TimelockPeriodAboveTenYears() public {
+        _expectDeployRevert(
+            abi.encodeWithSelector(LegacyVault.PeriodTooLong.selector, 3650 days + 1),
+            _defaultHeirs(),
+            _defaultShares(),
+            _defaultGuardians(),
+            THRESHOLD,
+            INACTIVITY,
+            3650 days + 1
+        );
+    }
+
+    /// @dev Nilai persis yang dipakai saat membuktikan temuan L-1.
+    function test_RevertWhen_PeriodsAreUint256Max() public {
+        uint256 huge = type(uint256).max;
+        _expectDeployRevert(
+            abi.encodeWithSelector(LegacyVault.PeriodTooLong.selector, huge),
+            _defaultHeirs(),
+            _defaultShares(),
+            _defaultGuardians(),
+            THRESHOLD,
+            huge,
+            TIMELOCK
+        );
+        _expectDeployRevert(
+            abi.encodeWithSelector(LegacyVault.PeriodTooLong.selector, huge),
+            _defaultHeirs(),
+            _defaultShares(),
+            _defaultGuardians(),
+            THRESHOLD,
+            INACTIVITY,
+            huge
+        );
+    }
+
+    /// @dev Dengan periode terpanjang yang diizinkan, semua penjumlahan waktu tetap aman
+    ///      dan klaim bisa berjalan sampai Distributed.
+    function test_MaxPeriods_ClaimFlowCompletesWithoutOverflow() public {
+        LegacyVault longest =
+            _deploy(_defaultHeirs(), _defaultShares(), _defaultGuardians(), THRESHOLD, 3650 days, 3650 days);
+
+        LegacyVault.Status memory status = longest.getStatus();
+        assertEq(status.activeUntil, longest.lastCheckIn() + 3650 days);
+
+        _runToDistributed(longest);
+
+        assertEq(uint256(longest.state()), uint256(LegacyVault.State.Distributed));
+        assertEq(longest.snapshot(), INITIAL_DEPOSIT);
+    }
 }

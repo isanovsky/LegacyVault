@@ -144,7 +144,7 @@ Hal yang perlu diperhatikan:
 - **Ganti semua alamat bawaan Anvil.** `script/Deploy.s.sol` akan berhenti dengan error `AnvilAccountOnPublicChain` jika owner, heir, atau guardian masih memakai akun Anvil. Private key akun Anvil diketahui semua orang, sehingga siapa pun bisa berperan sebagai heir atau guardian.
 - **Akun dari `PRIVATE_KEY` menjadi owner vault.**
 - **Jangan commit `.env`.** File ini sudah ada di `.gitignore`. Periksa dengan `git status` bahwa `.env` tidak muncul.
-- **`INACTIVITY_PERIOD` dan `TIMELOCK_PERIOD` minimal 86400 (1 hari).** Di Sepolia waktu tidak bisa dimajukan, jadi untuk demo klaim di testnet pakai nilai kecil, misalnya 86400. Artinya Anda harus menunggu satu hari sungguhan untuk setiap periode.
+- **`INACTIVITY_PERIOD` dan `TIMELOCK_PERIOD` minimal 86400 (1 hari) dan maksimal 315360000 (3650 hari).** Di Sepolia waktu tidak bisa dimajukan, jadi untuk demo klaim di testnet pakai nilai kecil, misalnya 86400. Artinya Anda harus menunggu satu hari sungguhan untuk setiap periode.
 
 ### 5. Simulasi dulu (tanpa mengirim transaksi)
 

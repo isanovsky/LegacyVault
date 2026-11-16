@@ -34,6 +34,7 @@ const MESSAGES = {
   InvalidSharesTotal: ([total]) => `total porsi harus tepat 10000 bps (100%), bukan ${total}.`,
   InvalidThreshold: ([threshold, count]) => `threshold ${threshold} tidak valid untuk ${count} guardian.`,
   PeriodTooShort: () => "periode minimal 1 hari.",
+  PeriodTooLong: () => "periode maksimal 3650 hari (10 tahun).",
 };
 
 /** Cari data revert (hex) di dalam objek error ethers, yang letaknya bisa berbeda-beda. */

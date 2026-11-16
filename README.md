@@ -33,9 +33,10 @@ Kontrak ini hanya tahu bahwa pemilik **tidak aktif**, bukan bahwa pemilik mening
 | [SPEC.md](SPEC.md) | Spesifikasi desain: peran, fungsi, state machine, invariant, model ancaman |
 | [docs/ARSITEKTUR.md](docs/ARSITEKTUR.md) | Diagram komponen, diagram state, flowchart klaim, tabel fungsi dan peran |
 | [docs/KEAMANAN.md](docs/KEAMANAN.md) | Ancaman, mitigasi, dan test yang membuktikannya; pembahasan `block.timestamp`; risiko yang diterima |
+| [docs/REVIEW.md](docs/REVIEW.md) | Review keamanan tahap 7: temuan, perbaikan, dan test regresi |
 | [docs/HASIL-UJI.md](docs/HASIL-UJI.md) | Ringkasan hasil test, test keamanan, uji perusakan, dan laporan gas |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Panduan deploy lengkap ke Anvil dan Sepolia |
-| [docs/MUTATION.md](docs/MUTATION.md) | Uji perusakan: 22 mutasi pada kontrak dan test yang menangkapnya |
+| [docs/MUTATION.md](docs/MUTATION.md) | Uji perusakan: 23 mutasi pada kontrak dan test yang menangkapnya |
 | [PENJELASAN.md](PENJELASAN.md) | Penjelasan per tahap dalam bahasa awam, beserta contoh pertanyaan dosen |
 
 ## Cara menjalankan
@@ -139,9 +140,9 @@ legacyvault/
 ├── src/
 │   └── LegacyVault.sol          Kontrak utama
 ├── test/
-│   ├── LegacyVault.t.sol        Test fungsional: jalur berhasil dan gagal per fungsi (59 test)
+│   ├── LegacyVault.t.sol        Test fungsional: jalur berhasil dan gagal per fungsi (60 test)
 │   ├── security/
-│   │   └── LegacyVault.security.t.sol   Test per baris model ancaman (34 test)
+│   │   └── LegacyVault.security.t.sol   Test per baris model ancaman dan temuan review (38 test)
 │   ├── script/
 │   │   └── Scripts.t.sol        Test skrip deploy dan seed (7 test)
 │   └── utils/

@@ -669,3 +669,55 @@ J: Tiga hal:
 - dukungan token ERC-20 dengan `SafeERC20`;
 - fungsi untuk mengganti guardian;
 - jalan keluar jika guardian tidak responsif, misalnya batas waktu persetujuan.
+---
+
+## Tahap 7: Review keamanan
+
+### 1. Apa yang dibuat
+
+Kontrak diperiksa ulang dengan sudut pandang auditor yang curiga. Ada tiga pertanyaan utama:
+- Adakah jalan dana terkunci selamanya?
+- Adakah jalan dana keluar tanpa syarat lengkap?
+- Adakah jalan dana terhitung dua kali?
+
+Laporan lengkapnya ada di `docs/REVIEW.md`.
+
+Slither (alat analisis otomatis) tidak terpasang, jadi **tidak dijalankan**.
+
+Hasil review:
+
+| Temuan | Isi | Tindakan |
+|---|---|---|
+| L-1 | Periode raksasa (misalnya salah ketik saat deploy) membuat hitungan waktu meluap. Akibatnya status tidak bisa dibaca, klaim tidak bisa dimulai, atau persetujuan terakhir selalu gagal sehingga dana terkunci. | **Diperbaiki:** periode maksimal 3650 hari (10 tahun) |
+| L-2 | Heir yang alamatnya menolak ETH tidak bisa menarik bagiannya, sehingga bagian itu terkunci | Dicatat sebagai risiko yang diterima di SPEC.md |
+| I-1 sampai I-4 | Heir kehilangan kunci, transaksi bernilai nol, threshold 1, dan konfirmasi risiko yang sudah tercatat | Dicatat, kode tidak diubah |
+
+Perubahan:
+- `src/LegacyVault.sol`: konstanta `MAX_PERIOD` dan error `PeriodTooLong`.
+- `SPEC.md`: aturan batas atas dan dua risiko baru yang diterima.
+- Lima test regresi baru.
+- Pesan error di UI, serta catatan batas di `.env.example` dan `docs/DEPLOY.md`.
+
+Bukti:
+- Sebelum diperbaiki, masalah L-1 dibuktikan dengan test sementara.
+- Setelah diperbaiki, perbaikannya sengaja dihapus lagi untuk sementara (mutasi M23), dan 3 test langsung gagal. Ini bukti bahwa test baru benar-benar menjaga perbaikan.
+- Semua test sekarang lolos: `105 tests passed, 0 failed, 0 skipped`.
+
+### 2. Konsep yang dipakai
+
+**Overflow (meluap).** Angka di Solidity punya batas, seperti odometer mobil yang hanya punya sekian digit. Sejak Solidity 0.8, hitungan yang melewati batas tidak berputar ke nol. Transaksinya dibatalkan. Itu aman dari sisi angka, tetapi kalau hitungan itu ada di jalur wajib (misalnya menyetujui klaim), transaksi akan **selalu** gagal dan prosesnya macet.
+
+**Test regresi.** Test yang ditulis setelah bug ditemukan, supaya bug yang sama tidak bisa kembali diam-diam. Analoginya alarm yang dipasang di pintu yang pernah dibobol.
+
+**Review bukan bukti mutlak.** Review menemukan apa yang dicari. Karena itu setiap temuan dibuktikan dengan test, dan setiap perbaikan dibuktikan dengan uji perusakan.
+
+### 3. Pertanyaan yang mungkin diajukan dosen
+
+**T: Kenapa batasnya 10 tahun?**
+J: Cukup panjang untuk kebutuhan nyata masa tidak aktif, tetapi jauh dari batas angka yang bisa meluap. Angkanya pilihan desain, dan ditulis di SPEC.md.
+
+**T: Kenapa L-2 tidak diperbaiki?**
+J: Perbaikannya berarti menambah fitur baru, yaitu heir boleh menarik ke alamat lain. Itu di luar spesifikasi dan menambah celah baru. Wallet biasa selalu bisa menerima ETH, dan pemilik sendiri yang memilih alamat heir, jadi risikonya dicatat dan diterima.
+
+**T: Apakah kontrak ini sudah diaudit?**
+J: Belum oleh auditor independen. Ini review internal yang hasilnya didukung test. Slither juga belum dijalankan.

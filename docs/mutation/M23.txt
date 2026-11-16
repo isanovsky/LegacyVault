@@ -1,0 +1,65 @@
+M23: Hapus batas maksimal periode (MAX_PERIOD) di constructor
+Ditambahkan di tahap 7 untuk membuktikan test regresi temuan L-1.
+
+Diff mutasi (src/LegacyVault.sol):
+-        if (inactivityDuration > MAX_PERIOD) revert PeriodTooLong(inactivityDuration);
+-        if (timelockDuration > MAX_PERIOD) revert PeriodTooLong(timelockDuration);
+
+$ forge test --match-path test/security/*
+Compiling 2 files with Solc 0.8.28
+Solc 0.8.28 finished in 850.93ms
+Compiler run successful!
+
+Ran 38 tests for test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[PASS] testFuzz_RevertWhen_NonOwnerCallsOwnerFunctions(address) (runs: 1000, μ: 121273, ~: 121273)
+[PASS] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 1000, μ: 4035814, ~: 4103496)
+[PASS] test_CancelClaim_DuringTimelockBlocksFinalize() (gas: 383041)
+[PASS] test_CancelClaim_OldApprovalsDoNotCarryOver() (gas: 585828)
+[PASS] test_Deposit_ByStrangerDoesNotCheckIn() (gas: 54898)
+[PASS] test_FinalizeClaim_ByAnyoneAtUnlockTime() (gas: 461818)
+[PASS] test_MaxPeriods_ClaimFlowCompletesWithoutOverflow() (gas: 3466914)
+[PASS] test_RevertWhen_DepositAfterDistributed() (gas: 447025)
+[PASS] test_RevertWhen_FinalizeBeforeThreshold() (gas: 206131)
+[PASS] test_RevertWhen_FinalizeBeforeTimelock() (gas: 303063)
+[PASS] test_RevertWhen_FinalizeWithoutApprovals() (gas: 126629)
+[PASS] test_RevertWhen_GuardianApprovesTwice() (gas: 213212)
+[PASS] test_RevertWhen_GuardianCancelsClaim() (gas: 123929)
+[PASS] test_RevertWhen_GuardianWithdrawsInheritance() (gas: 444167)
+[PASS] test_RevertWhen_HeirApproves() (gas: 124111)
+[PASS] test_RevertWhen_HeirCancelsClaim() (gas: 121908)
+[PASS] test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected() (gas: 3747120)
+[PASS] test_RevertWhen_HeirWithdrawsInheritanceTwice() (gas: 487639)
+[FAIL: next call did not revert as expected] test_RevertWhen_InactivityPeriodAboveTenYears() (gas: 3032704)
+[PASS] test_RevertWhen_InactivityPeriodBelowOneDay() (gas: 624088)
+[PASS] test_RevertWhen_MoreThanTenGuardians() (gas: 671317)
+[PASS] test_RevertWhen_MoreThanTenHeirs() (gas: 680396)
+[PASS] test_RevertWhen_OwnerApproves() (gas: 126089)
+[PASS] test_RevertWhen_OwnerRejectsEth() (gas: 3512040)
+[PASS] test_RevertWhen_OwnerStartsClaim() (gas: 48483)
+[PASS] test_RevertWhen_OwnerWithdrawsInheritance() (gas: 444211)
+[FAIL: Error != expected error: vm.expectRevert: you must call another function prior to expecting a second revert != PeriodTooLong(115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])] test_RevertWhen_PeriodsAreUint256Max() (gas: 3036027)
+[PASS] test_RevertWhen_PlainTransferAfterDistributed() (gas: 447343)
+[PASS] test_RevertWhen_StartClaimAfterOwnerCheckedIn() (gas: 85521)
+[PASS] test_RevertWhen_StartClaimBeforeInactivityEnds() (gas: 48189)
+[PASS] test_RevertWhen_StrangerApproves() (gas: 126133)
+[PASS] test_RevertWhen_StrangerStartsClaim() (gas: 48438)
+[PASS] test_RevertWhen_StrangerWithdrawsInheritance() (gas: 444188)
+[FAIL: next call did not revert as expected] test_RevertWhen_TimelockPeriodAboveTenYears() (gas: 3032672)
+[PASS] test_RevertWhen_TimelockPeriodBelowOneDay() (gas: 624056)
+[PASS] test_RevertWhen_UpdateHeirsWithMoreThanTenHeirs() (gas: 123125)
+[PASS] test_UpdateHeirs_RemovedHeirCannotStartClaim() (gas: 130833)
+[PASS] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3596515)
+Suite result: FAILED. 35 passed; 3 failed; 0 skipped; finished in 332.39ms (710.28ms CPU time)
+
+Ran 1 test suite in 334.45ms (332.39ms CPU time): 35 tests passed, 3 failed, 0 skipped (38 total tests)
+
+Failing tests:
+Encountered 3 failing tests in test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
+[FAIL: next call did not revert as expected] test_RevertWhen_InactivityPeriodAboveTenYears() (gas: 3032704)
+[FAIL: Error != expected error: vm.expectRevert: you must call another function prior to expecting a second revert != PeriodTooLong(115792089237316195423570985008687907853269984665640564039457584007913129639935 [1.157e77])] test_RevertWhen_PeriodsAreUint256Max() (gas: 3036027)
+[FAIL: next call did not revert as expected] test_RevertWhen_TimelockPeriodAboveTenYears() (gas: 3032672)
+
+Encountered a total of 3 failing tests, 35 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 3 failed tests
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger

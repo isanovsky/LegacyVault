@@ -22,8 +22,8 @@ Nomor baris di tabel merujuk ke `src/LegacyVault.sol` versi commit tahap 3.
 
 | | Jumlah |
 |---|---|
-| Mutasi dijalankan | 22 |
-| Tertangkap test keamanan | 19 |
+| Mutasi dijalankan | 23 (M23 ditambahkan di tahap 7) |
+| Tertangkap test keamanan | 20 |
 | Hanya tertangkap test utama | 1 (M16) |
 | Tidak tertangkap test mana pun | 2 (M02, M03) |
 
@@ -113,6 +113,16 @@ Pull payment sendiri adalah keputusan desain (`finalizeClaim` tidak berisi loop 
 |---|---|---|---|---|
 | M21 | 220 | Hapus `inState(State.Active)` dari `receive` | Tertangkap | `test_RevertWhen_PlainTransferAfterDistributed` |
 | M22 | 225 | Hapus `inState(State.Active)` dari `deposit` | Tertangkap | `test_RevertWhen_DepositAfterDistributed` |
+
+### Temuan L-1 (review tahap 7): periode raksasa
+
+Mutasi ini dijalankan di tahap 7, setelah perbaikan temuan L-1 di [REVIEW.md](REVIEW.md). Karena perbaikan belum di-commit saat itu, file kontrak disalin dulu, dua baris dihapus, test dijalankan, lalu salinan dikembalikan. Hash file setelah dikembalikan sama dengan sebelum mutasi.
+
+| ID | Mutasi | Hasil | Test yang gagal |
+|---|---|---|---|
+| M23 | Hapus kedua pemeriksaan `PeriodTooLong` di constructor | Tertangkap (35 lolos, 3 gagal) | `test_RevertWhen_InactivityPeriodAboveTenYears`, `test_RevertWhen_TimelockPeriodAboveTenYears`, `test_RevertWhen_PeriodsAreUint256Max` |
+
+Test keempat di kelompok ini, `test_MaxPeriods_ClaimFlowCompletesWithoutOverflow`, tetap lolos karena memakai periode tepat 3650 hari, yang memang diizinkan. Test itu membuktikan bahwa periode terpanjang yang diizinkan tidak menyebabkan overflow.
 
 ## Mengulang uji ini secara manual
 

@@ -47,6 +47,11 @@ contract LegacyVault is ReentrancyGuard {
     /// @dev Periode minimal 1 hari supaya pergeseran block.timestamp beberapa detik tidak berarti.
     uint256 public constant MIN_PERIOD = 1 days;
 
+    /// @dev Periode maksimal 10 tahun. Tanpa batas atas, nilai raksasa (misalnya karena salah ketik saat
+    ///      deploy) membuat lastCheckIn + inactivityPeriod atau block.timestamp + timelockPeriod meluap,
+    ///      sehingga getStatus, startClaim, atau approveClaim selalu gagal dan dana terkunci selamanya.
+    uint256 public constant MAX_PERIOD = 3650 days;
+
     // ---------------------------------------------------------------------
     // Konfigurasi (tetap sejak deploy)
     // ---------------------------------------------------------------------
@@ -144,6 +149,7 @@ contract LegacyVault is ReentrancyGuard {
     error InvalidSharesTotal(uint256 total);
     error InvalidThreshold(uint256 threshold, uint256 guardianCount);
     error PeriodTooShort(uint256 period);
+    error PeriodTooLong(uint256 period);
 
     // ---------------------------------------------------------------------
     // Modifier
@@ -194,6 +200,8 @@ contract LegacyVault is ReentrancyGuard {
     ) payable {
         if (inactivityDuration < MIN_PERIOD) revert PeriodTooShort(inactivityDuration);
         if (timelockDuration < MIN_PERIOD) revert PeriodTooShort(timelockDuration);
+        if (inactivityDuration > MAX_PERIOD) revert PeriodTooLong(inactivityDuration);
+        if (timelockDuration > MAX_PERIOD) revert PeriodTooLong(timelockDuration);
         if (requiredApprovals == 0 || requiredApprovals > initialGuardians.length) {
             revert InvalidThreshold(requiredApprovals, initialGuardians.length);
         }

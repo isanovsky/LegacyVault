@@ -30,7 +30,7 @@ Aturan validasi peran (dicek di constructor dan `updateHeirs`):
 - Total porsi heir harus tepat 10000 basis point (10000 bps = 100%). Setiap porsi > 0.
 - `threshold` (jumlah persetujuan minimal) harus 1 ≤ threshold ≤ jumlah guardian.
 - Maksimal 10 heir dan 10 guardian (membatasi panjang loop agar tidak terjadi gas DoS).
-- `inactivityPeriod` dan `timelockPeriod` masing-masing minimal 1 hari.
+- `inactivityPeriod` dan `timelockPeriod` masing-masing minimal 1 hari dan maksimal 3650 hari (10 tahun). Batas atas mencegah penjumlahan waktu meluap (overflow), yang akan membuat `getStatus`, `startClaim`, atau `approveClaim` selalu gagal dan dana terkunci (temuan L-1 review tahap 7).
 
 ## 3. State machine
 
@@ -106,3 +106,5 @@ stateDiagram-v2
 - ETH yang dipaksa masuk tanpa melalui `receive` (misalnya lewat `selfdestruct`) setelah `Distributed` akan terkunci.
 - Data heir, guardian, dan porsi terlihat publik di blockchain.
 - Owner tidak dapat mengganti guardian (disederhanakan untuk tugas ini).
+- Heir yang alamatnya tidak bisa menerima ETH (misalnya kontrak tanpa `receive`) tidak dapat menarik bagiannya; bagian itu terkunci selamanya. Heir lain tidak terdampak (temuan L-2 review tahap 7).
+- Heir yang kehilangan private key tidak dapat menarik bagiannya; bagian itu terkunci selamanya.
