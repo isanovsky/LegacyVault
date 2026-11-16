@@ -622,3 +622,50 @@ J: Tidak. Semuanya hanya tampilan. Kontrak, test, dan aturan keamanan tidak beru
 
 **T: Kenapa animasinya harus ditekan per langkah?**
 J: Supaya penyaji mengatur tempo sesuai penjelasannya, dan penonton bisa bertanya di langkah mana pun tanpa animasi berlari duluan.
+
+---
+
+## Tahap 6: Dokumentasi akhir
+
+### 1. Apa yang dibuat
+
+Empat dokumen yang merangkum seluruh proyek. Bagian "Keterbatasan dan pengembangan lanjutan" ada di dalam README:
+
+| File | Isi |
+|---|---|
+| `README.md` | Masalah, solusi, cara menjalankan (lokal dan Sepolia), struktur folder, serta keterbatasan dan pengembangan lanjutan |
+| `docs/ARSITEKTUR.md` | Diagram komponen (UI ke kontrak ke blockchain), diagram state, flowchart proses klaim, tabel fungsi dan peran, daftar event |
+| `docs/KEAMANAN.md` | Setiap ancaman dipetakan ke mitigasi dan nama test nyata yang membuktikannya, pembahasan `block.timestamp`, dan risiko yang diterima |
+| `docs/HASIL-UJI.md` | Ringkasan angka dari output test, test keamanan, uji perusakan, dan laporan gas |
+
+Output test di `docs/` dijalankan ulang supaya mencakup seluruh 100 test. Sebelumnya file itu masih berisi hasil tahap 2 (92 test dalam satu file, sebelum test dipecah). Hasil terbarunya: `100 tests passed, 0 failed, 0 skipped`.
+
+Setiap nama test yang disebut di dokumen sudah dicek otomatis terhadap output `forge test`. Ada 59 nama yang dirujuk, dan semuanya ada.
+
+Dokumen ini juga jujur soal batasnya:
+- Dua mutasi (M02 dan M03, tentang perlindungan reentrancy) tidak tertangkap test, karena proyek ini tidak memuat kontrak penyerang.
+- Pembahasan `block.timestamp` adalah analisis, bukan hasil test.
+- Deploy Sepolia belum pernah dijalankan.
+
+### 2. Konsep yang dipakai
+
+**Ketertelusuran (traceability).** Setiap klaim keamanan bisa dilacak ke bukti: ancaman, lalu baris kode yang menahannya, lalu test yang gagal jika baris itu dirusak. Analoginya laporan keuangan yang setiap angkanya punya kuitansi. Klaim tanpa kuitansi ditandai sebagai analisis.
+
+**Risiko yang diterima.** Tidak semua risiko harus dihilangkan. Sebagian sengaja diterima dan ditulis terbuka, misalnya guardian yang tidak responsif. Mengetahui risiko dan menuliskannya lebih baik daripada berpura-pura sistemnya sempurna.
+
+### 3. Pertanyaan yang mungkin diajukan dosen
+
+**T: Apakah kontrak ini sudah aman?**
+J: Untuk sembilan ancaman di spesifikasi, ada mitigasi dan test yang membuktikannya. Ada dua catatan: perlindungan reentrancy tidak diuji dengan kontrak penyerang, dan ini bukan audit independen. Rinciannya ada di `docs/KEAMANAN.md`.
+
+**T: Kenapa memakai `block.timestamp` kalau bisa dimanipulasi?**
+J: Pembuat blok hanya bisa menggeser waktu dalam hitungan detik, sedangkan periode terpendek kontrak ini 1 hari. Selisih beberapa detik tidak memberi keuntungan apa pun.
+
+**T: Apakah kontrak ini bisa menggantikan surat wasiat?**
+J: Tidak. Kontrak mengatur pemindahan teknis ETH, bukan hak hukum. Kontrak tidak tahu pemilik meninggal, hanya tahu pemilik tidak aktif, dan pembagiannya tidak diperiksa terhadap hukum waris. Sebaiknya dipakai bersama wasiat yang sah.
+
+**T: Apa yang paling perlu dikembangkan selanjutnya?**
+J: Tiga hal:
+- dukungan token ERC-20 dengan `SafeERC20`;
+- fungsi untuk mengganti guardian;
+- jalan keluar jika guardian tidak responsif, misalnya batas waktu persetujuan.

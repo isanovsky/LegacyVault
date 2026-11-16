@@ -1,11 +1,9 @@
 $ forge test --match-path "test/security/*" -vv
-Compiling 3 files with Solc 0.8.28
-Solc 0.8.28 finished in 844.50ms
-Compiler run successful!
+No files changed, compilation skipped
 
 Ran 34 tests for test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTest
 [PASS] testFuzz_RevertWhen_NonOwnerCallsOwnerFunctions(address) (runs: 1000, μ: 121207, ~: 121207)
-[PASS] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 1000, μ: 4042630, ~: 4090275)
+[PASS] testFuzz_SharesAlwaysAddUpToSnapshot(uint256,uint256,uint256) (runs: 1000, μ: 4026204, ~: 4090257)
 [PASS] test_CancelClaim_DuringTimelockBlocksFinalize() (gas: 382899)
 [PASS] test_CancelClaim_OldApprovalsDoNotCarryOver() (gas: 585686)
 [PASS] test_Deposit_ByStrangerDoesNotCheckIn() (gas: 54898)
@@ -38,6 +36,6 @@ Ran 34 tests for test/security/LegacyVault.security.t.sol:LegacyVaultSecurityTes
 [PASS] test_RevertWhen_UpdateHeirsWithMoreThanTenHeirs() (gas: 123125)
 [PASS] test_UpdateHeirs_RemovedHeirCannotStartClaim() (gas: 130855)
 [PASS] test_WithdrawInheritance_RoundingRemainderGoesToLastHeir() (gas: 3583226)
-Suite result: ok. 34 passed; 0 failed; 0 skipped; finished in 316.14ms (661.07ms CPU time)
+Suite result: ok. 34 passed; 0 failed; 0 skipped; finished in 331.15ms (692.75ms CPU time)
 
-Ran 1 test suite in 321.57ms (316.14ms CPU time): 34 tests passed, 0 failed, 0 skipped (34 total tests)
+Ran 1 test suite in 334.15ms (331.15ms CPU time): 34 tests passed, 0 failed, 0 skipped (34 total tests)
