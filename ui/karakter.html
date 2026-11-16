@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LegacyVault: pratinjau karakter</title>
+  </head>
+  <body>
+    <header class="masthead">
+      <div class="masthead-title">
+        <h1>Pratinjau karakter</h1>
+        <p class="subtitle">Enam tokoh demo, masing-masing dengan empat ekspresi, untuk dinilai sebelum dipasang di UI.</p>
+      </div>
+      <p class="hint"><a href="/">Kembali ke simulasi</a></p>
+    </header>
+
+    <main>
+      <table class="table character-sheet">
+        <thead>
+          <tr>
+            <th scope="col">Tokoh</th>
+            <th scope="col">Biasa</th>
+            <th scope="col">Senang</th>
+            <th scope="col">Lega</th>
+            <th scope="col">Cemas</th>
+            <th scope="col">Ukuran kecil</th>
+          </tr>
+        </thead>
+        <tbody id="sheet"></tbody>
+      </table>
+      <p class="hint">
+        Ukuran kecil (32 dan 24 piksel) adalah ukuran yang akan dipakai di pemilih tokoh dan buku catatan event.
+      </p>
+    </main>
+
+    <script type="module" src="/src/karakter.js"></script>
+  </body>
+</html>

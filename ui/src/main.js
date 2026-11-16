@@ -3,7 +3,8 @@
 // teks dan status tombol, supaya fokus keyboard dan isian pengguna tidak hilang.
 import "./style.css";
 import * as chain from "./chain.js";
-import { DEMO_ACCOUNTS, nameOf } from "./demo-accounts.js";
+import { DEMO_ACCOUNTS, characterOf, nameOf } from "./demo-accounts.js";
+import { characterSvg } from "./characters.js";
 import { describeError } from "./errors.js";
 import {
   STATE_DESCRIPTIONS,
@@ -106,6 +107,8 @@ const ui = {
   busy: false,
   fatal: null,
   data: null,
+  // Hasil aksi terakhir, dipakai untuk ekspresi wajah tokoh: { address, kind, actionId }.
+  lastOutcome: null,
 };
 
 const actionControls = new Map();
@@ -128,6 +131,17 @@ function el(tag, attrs = {}, ...children) {
 }
 
 const stamp = (text) => el("span", { class: "stamp" }, text);
+
+/**
+ * Gambar kecil tokoh untuk sebuah alamat. Bersifat dekoratif (aria-hidden) karena nama tokoh
+ * selalu tertulis di sebelahnya. Alamat yang bukan tokoh demo mendapat ruang kosong seukuran.
+ */
+function avatar(address, size = 26, expression = "netral") {
+  const span = el("span", { class: "avatar", style: `width:${size}px;height:${size}px` });
+  const character = address ? characterOf(address) : null;
+  if (character) span.innerHTML = characterSvg(character, { size, expression, decorative: true });
+  return span;
+}
 const mono = (text) => el("span", { class: "mono" }, text);
 
 // ---------------------------------------------------------------------------
@@ -146,7 +160,13 @@ function buildPersonas() {
       checked: account.address === ui.selected,
     });
     const role = el("span", { class: "persona-role" }, "…");
-    const label = el("label", { for: id, class: "persona" }, input, el("span", { class: "persona-name" }, account.name), role);
+    const label = el(
+      "label",
+      { for: id, class: "persona" },
+      input,
+      avatar(account.address, 34),
+      el("span", { class: "persona-text" }, el("span", { class: "persona-name" }, account.name), role),
+    );
     input.addEventListener("change", () => {
       ui.selected = account.address;
       render();
@@ -235,8 +255,10 @@ async function runAction(action, input) {
   showResult("busy", `${action.label} atas nama ${actorName}…`);
   try {
     const receipt = await chain.sendAction(ui.selected, action.method, args, value);
+    ui.lastOutcome = { address: ui.selected, kind: "ok", actionId: action.id };
     showResult("ok", `${action.label} oleh ${actorName}. Blok #${receipt.blockNumber}, transaksi ${shortHash(receipt.hash)}.`);
   } catch (err) {
+    ui.lastOutcome = { address: ui.selected, kind: "rejected", actionId: action.id };
     const message = err instanceof chain.WrongNetworkError ? err.message : describeError(err, chain.vault.interface);
     showResult("rejected", message);
   } finally {
@@ -335,9 +357,42 @@ function renderPersonas() {
   }
 }
 
+/**
+ * Ekspresi wajah tokoh yang sedang dipilih:
+ * - setelah ia bertindak: cemas jika ditolak, lega jika membatalkan klaim, senang jika berhasil;
+ * - selain itu mengikuti keadaan: pemilik cemas saat ada klaim terhadapnya, ahli waris senang
+ *   setelah bagiannya ditarik.
+ */
+function portraitExpression(role) {
+  const outcome = ui.lastOutcome;
+  if (outcome && outcome.address === ui.selected) {
+    if (outcome.kind === "rejected") return "cemas";
+    if (outcome.actionId === "cancelClaim") return "lega";
+    return "senang";
+  }
+  const state = ui.data?.status.state;
+  if (role === "owner" && state === CLAIMING) return "cemas";
+  if (role === "heir" && state === DISTRIBUTED) {
+    const heir = ui.data.heirs.find((h) => h.address.toLowerCase() === ui.selected.toLowerCase());
+    if (heir && heir.inheritance === 0n) return "senang";
+  }
+  return "netral";
+}
+
+let shownPortrait = "";
+
 function renderActions() {
   const role = ui.data?.roles.get(ui.selected) ?? "other";
   const actorName = nameOf(ui.selected);
+
+  // Gambar hanya diganti jika tokoh atau ekspresinya berubah.
+  const expression = portraitExpression(role);
+  const portraitKey = `${ui.selected}:${expression}`;
+  if (portraitKey !== shownPortrait) {
+    $("actor-portrait").replaceChildren(avatar(ui.selected, 84, expression));
+    shownPortrait = portraitKey;
+  }
+
   $("actor-line").replaceChildren(
     "Bertindak sebagai ",
     el("strong", {}, actorName),
@@ -496,7 +551,7 @@ function renderHeirs() {
     return el(
       "tr",
       {},
-      el("td", {}, nameOf(heir.address)),
+      el("td", {}, el("span", { class: "name-cell" }, avatar(heir.address), nameOf(heir.address))),
       el("td", { class: "mono num" }, formatPercent(heir.bps)),
       el("td", { class: "mono num" }, formatEth(shares[index])),
       el("td", {}, statusCell),
@@ -512,37 +567,48 @@ function renderGuardians() {
     if (status.state !== CLAIMING) cell = el("span", { class: "muted" }, "tidak ada klaim berjalan");
     else if (guardian.approved) cell = stamp("MENYETUJUI");
     else cell = el("span", { class: "muted" }, "belum menyetujui");
-    return el("tr", {}, el("td", {}, nameOf(guardian.address)), el("td", { class: "mono" }, shortAddress(guardian.address)), el("td", {}, cell));
+    return el(
+      "tr",
+      {},
+      el("td", {}, el("span", { class: "name-cell" }, avatar(guardian.address), nameOf(guardian.address))),
+      el("td", { class: "mono" }, shortAddress(guardian.address)),
+      el("td", {}, cell),
+    );
   });
   $("guardian-table").tBodies[0].replaceChildren(...rows);
 }
 
-/** Kalimat untuk setiap event kontrak. `stampText` diisi untuk event yang perlu ditandai cap. */
+/**
+ * Kalimat untuk setiap event kontrak. `stampText` diisi untuk event yang perlu ditandai cap,
+ * `actor` adalah alamat tokoh yang gambarnya ditampilkan di samping kalimat.
+ */
 function describeEvent(event) {
   const a = event.args;
+  const owner = ui.data.owner;
   switch (event.name) {
     case "Deposited":
-      return { text: `${nameOf(a.from)} menyetor ${formatEth(a.amount)} ke vault.` };
+      return { actor: a.from, text: `${nameOf(a.from)} menyetor ${formatEth(a.amount)} ke vault.` };
     case "Withdrawn":
-      return { text: `${nameOf(a.to)} menarik ${formatEth(a.amount)} dari vault.` };
+      return { actor: a.to, text: `${nameOf(a.to)} menarik ${formatEth(a.amount)} dari vault.` };
     case "CheckedIn":
-      return { text: "Check-in pemilik: masa tidak aktif dihitung ulang.", minor: true };
+      return { actor: owner, text: "Check-in pemilik: masa tidak aktif dihitung ulang.", minor: true };
     case "HeirsUpdated":
-      return { text: "Daftar ahli waris diubah oleh pemilik." };
+      return { actor: owner, text: "Daftar ahli waris diubah oleh pemilik." };
     case "ClaimStarted":
-      return { text: `Klaim #${a.claimId} dimulai oleh ${nameOf(a.initiator)}.`, stampText: "KLAIM" };
+      return { actor: a.initiator, text: `Klaim #${a.claimId} dimulai oleh ${nameOf(a.initiator)}.`, stampText: "KLAIM" };
     case "ClaimApproved":
       return {
+        actor: a.guardian,
         text: `${nameOf(a.guardian)} menyetujui klaim #${a.claimId}. Persetujuan ${a.approvals}/${ui.data.status.threshold}.`,
       };
     case "ClaimUnlockScheduled":
       return { text: `Persetujuan cukup. Klaim #${a.claimId} bisa difinalisasi mulai ${formatDate(a.unlockTime)}.` };
     case "ClaimCancelled":
-      return { text: `Klaim #${a.claimId} dibatalkan oleh pemilik.`, stampText: "DIBATALKAN" };
+      return { actor: owner, text: `Klaim #${a.claimId} dibatalkan oleh pemilik.`, stampText: "DIBATALKAN" };
     case "ClaimFinalized":
       return { text: `Klaim #${a.claimId} final. ${formatEth(a.snapshot)} dibagikan ke ahli waris.`, stampText: "FINAL" };
     case "InheritanceWithdrawn":
-      return { text: `${nameOf(a.heir)} menarik bagian warisan ${formatEth(a.amount)}.`, stampText: "DITARIK" };
+      return { actor: a.heir, text: `${nameOf(a.heir)} menarik bagian warisan ${formatEth(a.amount)}.`, stampText: "DITARIK" };
     default:
       return { text: event.name };
   }
@@ -551,18 +617,23 @@ function describeEvent(event) {
 function renderEventLog() {
   const events = [...ui.data.events].sort((x, y) => y.blockNumber - x.blockNumber || y.logIndex - x.logIndex);
   const items = events.map((event) => {
-    const { text, stampText, minor } = describeEvent(event);
+    const { text, stampText, minor, actor } = describeEvent(event);
     return el(
       "li",
       { class: `log-entry${minor ? " minor" : ""}` },
+      avatar(actor, 26),
       el(
         "div",
-        { class: "log-meta mono" },
-        el("time", { datetime: new Date(Number(event.timestamp) * 1000).toISOString() }, formatDateShort(event.timestamp)),
-        ` · blok #${event.blockNumber} · `,
-        el("span", { title: event.txHash }, shortHash(event.txHash)),
+        { class: "log-body" },
+        el(
+          "div",
+          { class: "log-meta mono" },
+          el("time", { datetime: new Date(Number(event.timestamp) * 1000).toISOString() }, formatDateShort(event.timestamp)),
+          ` · blok #${event.blockNumber} · `,
+          el("span", { title: event.txHash }, shortHash(event.txHash)),
+        ),
+        el("p", { class: "log-text" }, stampText ? [stamp(stampText), " "] : null, text),
       ),
-      el("p", { class: "log-text" }, stampText ? [stamp(stampText), " "] : null, text),
     );
   });
   $("event-log").replaceChildren(...(items.length ? items : [el("li", { class: "empty" }, "Belum ada event.")]));

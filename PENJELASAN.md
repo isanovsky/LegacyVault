@@ -47,7 +47,7 @@ Belum ada smart contract yang ditulis. Tahap ini hanya menyiapkan alat kerja:
 
 Analoginya simulator mengemudi: berlatih menabrak di simulator jauh lebih murah daripada di jalan raya.
 
-### 3. Pertanyaan yang mungkin diajukan dosen
+### 3. Pertanyaan 
 
 **T: Kenapa memakai Foundry, bukan Hardhat atau Remix?**
 J: Remix berjalan di browser dan cocok untuk mencoba, tetapi kurang cocok untuk proyek dengan banyak test. Hardhat menulis test dalam JavaScript, sedangkan Foundry menulis test dalam Solidity, bahasa yang sama dengan kontraknya. Foundry juga menyediakan fuzz testing (menguji dengan ribuan input acak) secara bawaan, dan itu dipakai untuk memeriksa perhitungan pembagian warisan.
@@ -128,7 +128,7 @@ Kenapa catatan di-nol-kan sebelum mengirim? Penerima ETH bisa berupa smart contr
 
 Untuk tiga yang terakhir, peringatan dimatikan hanya di baris atau fungsi itu dengan komentar `// forge-lint: disable-...`, dan alasannya ditulis di sebelahnya.
 
-### 3. Pertanyaan yang mungkin diajukan dosen
+### 3. Pertanyaan 
 
 **T: Bagaimana kontrak tahu pemiliknya sudah meninggal?**
 J: Tidak tahu. Kontrak hanya tahu pemilik tidak melakukan apa pun selama `inactivityPeriod`. Karena itu ada tiga lapisan pengaman: persetujuan guardian, masa tunggu (timelock), dan hak pemilik untuk membatalkan klaim selama masa tunggu.
@@ -223,7 +223,7 @@ Analoginya menguji timbangan dengan seribu barang berbeda, bukan hanya dengan sa
 
 **Laporan gas.** Setiap operasi di Ethereum memakan *gas*, satuan kerja komputasi yang dibayar dengan ETH. Laporan gas menunjukkan biaya setiap fungsi. Contohnya, `finalizeClaim` paling mahal karena harus menghitung bagian untuk setiap heir dalam loop. Biayanya naik seiring jumlah heir, dan itulah alasan jumlah heir dibatasi 10.
 
-### 3. Pertanyaan yang mungkin diajukan dosen
+### 3. Pertanyaan 
 
 **T: Bagaimana Anda tahu test-nya cukup?**
 J: Dengan tiga cara. Pertama, setiap fungsi publik punya test jalur berhasil dan jalur gagal. Kedua, nilai di sekitar batas diuji. Ketiga, kontrak sengaja dirusak di tiga tempat penting, dan test langsung gagal setiap kali. Test yang tetap hijau ketika kodenya rusak tidak ada gunanya.
@@ -360,7 +360,7 @@ Test `test_RevertWhen_HeirRejectsEth_OtherHeirsUnaffected` membuktikan hal ini. 
 
 Caranya, kontrak sengaja dirusak satu baris, lalu test dijalankan. Jika test gagal, test itu terbukti menjaga baris tersebut. Jika test tetap hijau, ada celah, dan celah itu harus dicatat dengan jujur, seperti M02 dan M03. Analoginya menguji alarm rumah dengan sengaja membuka jendela: alarm yang tidak berbunyi berarti ada jendela yang tidak dijaga.
 
-### 3. Pertanyaan yang mungkin diajukan dosen
+### 3. Pertanyaan 
 
 **T: Kenapa tidak membuat kontrak penyerang untuk membuktikan perlindungan reentrancy?**
 J: Proyek ini sengaja tidak memuat kode penyerang. Sebagai gantinya, perlindungan dibuktikan dengan tiga cara. Pertama, test menunjukkan bagian heir di-nol-kan dan tidak bisa ditarik dua kali. Kedua, kontrak memakai dua lapisan yang saling menutupi (CEI dan `nonReentrant`). Ketiga, uji perusakan dilaporkan apa adanya: dua mutasi itu tidak tertangkap, beserta alasannya.
@@ -443,7 +443,7 @@ Total test sekarang 100 (59 fungsional, 34 keamanan, 7 skrip), semuanya lolos.
 
 **Memajukan waktu di Anvil.** `evm_increaseTime` adalah fitur khusus Anvil untuk memajukan jam blockchain, mirip `vm.warp` di test. Jaringan publik tidak punya fitur ini, karena waktu di sana mengikuti jam sungguhan.
 
-### 3. Pertanyaan yang mungkin diajukan dosen
+### 3. Pertanyaan 
 
 **T: Kenapa private key tidak ditulis di kode atau di `package.json`?**
 J: Semua yang masuk Git bisa dibaca orang lain, terutama jika repositorinya diunggah ke GitHub. Private key testnet disimpan di `.env` yang ada di `.gitignore`. Untuk Anvil, tidak ada private key sama sekali: akun Anvil sudah terbuka, sehingga cukup menyebut alamatnya.
@@ -541,7 +541,7 @@ Di dunia nyata, signer adalah wallet seperti MetaMask yang memegang private key.
 
 **Waktu blockchain.** Kontrak memakai `block.timestamp`, yaitu waktu blok terakhir, bukan jam komputer. Karena itu semua tanggal di UI diambil dari blok. Setelah "Majukan 180 hari", jam di kepala halaman melompat ke tahun depan, sementara jam komputer tetap.
 
-### 3. Pertanyaan yang mungkin diajukan dosen
+### 3. Pertanyaan 
 
 **T: Kalau UI bisa diakali, apakah dana tidak aman?**
 J: Dana tetap aman, karena semua aturan ada di kontrak. Nyalakan "Mode uji" lalu tekan "Setujui klaim" sebagai Mas Kevin: tombolnya bisa ditekan, tetapi kontrak menolak dengan `NotGuardian`. Siapa pun bisa membuat UI sendiri atau memanggil kontrak langsung, dan aturannya tetap sama.
@@ -557,3 +557,68 @@ J: UI membacanya dari kontrak: `owner()`, `isHeir(alamat)`, dan `isGuardian(alam
 
 **T: Kenapa angka di tabel ahli waris ditulis lengkap sampai wei, tetapi saldo dompet dibulatkan?**
 J: Bagian warisan harus tepat, karena sisa pembulatan wei diberikan ke ahli waris terakhir dan harus terlihat jelas. Saldo dompet berkurang sedikit karena biaya gas setiap transaksi, dan angka panjang itu tidak penting untuk presentasi, jadi dibulatkan ke 4 desimal dengan tanda "±".
+
+---
+
+## Tahap 5b: Karakter tokoh dan halaman "Cara kerja"
+
+### 1. Apa yang dibuat di tahap ini
+
+Atas permintaan pemilik proyek, tampilan diberi **karakter untuk setiap tokoh**, dan ada **halaman penjelasan beranimasi**. Gayanya "jalan tengah": tetap bergaya dokumen notaris, tetapi lebih hidup. Keputusan ini juga dicatat di aturan UI dalam `CLAUDE.md`.
+
+**Karakter** (`ui/src/characters.js`, pratinjau di `ui/karakter.html`):
+
+| Tokoh | Ciri |
+|---|---|
+| Pak Icanov | Topi, kacamata kotak, kumis, kunci brankas |
+| Mas Kevin | Rambut jabrik, hoodie, tas selempang |
+| Mas Murni | Rambut belah samping, kemeja, tas selempang |
+| Mas Barrok | Rambut cepak, jaket, bersedekap |
+| Notaris Budi | Kacamata bulat, jas, stempel |
+| Pak RT Wowo | Peci, kumis tebal, batik, papan pengumuman |
+
+- Semua digambar dengan kode SVG: garis tinta, warna lembut, tanpa gradien, tanpa emoji, tanpa gambar dari luar.
+- Setiap tokoh punya empat ekspresi (biasa, senang, lega, cemas), dan ekspresinya **memberi informasi**:
+  - tokoh yang transaksinya ditolak menjadi cemas;
+  - pemilik yang membatalkan klaim menjadi lega;
+  - ahli waris yang sudah menarik bagian menjadi senang;
+  - pemilik terlihat cemas selama ada klaim terhadapnya.
+
+**Di halaman simulasi**, karakter muncul di empat tempat: pemilih tokoh, panel aksi (gambar besar tokoh yang dipilih), tabel ahli waris dan guardian, serta buku catatan event (siapa yang melakukan setiap kejadian).
+
+**Halaman "Cara kerja"** (`ui/penjelasan.html`) berisi empat bagian, 31 langkah:
+
+| Bagian | Isi | Langkah |
+|---|---|---|
+| 1. Peta arsitektur | UI, ethers.js, JSON-RPC, Anvil, EVM, LegacyVault; ditutup perbandingan dengan jaringan sungguhan | 8 |
+| 2. Dari kode ke blockchain | `.sol`, `forge build`, bytecode dan ABI, deploy, alamat kontrak, `contract.json`, UI | 7 |
+| 3. Perjalanan satu transaksi | Klik, simulasi, ditolak (`OwnerStillActive`), waktu maju, kirim, blok baru, tahap berubah, event dicatat | 8 |
+| 4. Perjalanan uang warisan | Setor, 180 hari tanpa kabar, klaim, 2 persetujuan, timelock, snapshot dibagi, ditarik sendiri | 8 |
+
+Cara pakainya:
+- Tombol **Sebelumnya** dan **Berikutnya**, atau panah kiri dan kanan di keyboard.
+- Animasi tidak berjalan sendiri, jadi Anda yang mengatur tempo sambil menjelaskan.
+- Bagian yang sedang dibahas disorot, bagian lain dipudarkan.
+- Benda yang berpindah (pesan, berkas, koin, amplop) bergerak ke tujuannya untuk memperlihatkan arah aliran.
+- Jika komputer diatur "kurangi gerakan", perpindahan langsung tanpa animasi.
+- Tautan langsung ke bagian tertentu juga bisa, misalnya `penjelasan.html#transaksi`.
+
+**Yang sudah dicek di browser:**
+- Ke-31 langkah berjalan tanpa error.
+- Panah kiri dan kanan berpindah langkah.
+- Ekspresi Mas Kevin berubah cemas setelah klaimnya ditolak di halaman simulasi.
+- Ditemukan dan diperbaiki: amplop pesan menutupi wajah tokoh, dan perubahan `#bagian` di alamat belum memindah bagian.
+
+### 2. Konsep yang dipakai
+
+**Animasi yang memberi informasi.** Setiap gerakan menjawab pertanyaan "ke mana data atau uang pergi?". Tidak ada animasi yang berputar sendiri sebagai hiasan. Analoginya papan tulis yang digambar sambil menjelaskan, bukan video yang diputar.
+
+**SVG.** Format gambar berbasis kode, sehingga gambar tetap tajam di layar proyektor seberapa pun ukurannya, dan bagian-bagiannya (wajah, cap, amplop) bisa diubah dengan JavaScript.
+
+### 3. Pertanyaan yang mungkin diajukan dosen
+
+**T: Apakah karakter dan animasi ini memengaruhi kontrak?**
+J: Tidak. Semuanya hanya tampilan. Kontrak, test, dan aturan keamanan tidak berubah sama sekali.
+
+**T: Kenapa animasinya harus ditekan per langkah?**
+J: Supaya penyaji mengatur tempo sesuai penjelasannya, dan penonton bisa bertanya di langkah mana pun tanpa animasi berlari duluan.

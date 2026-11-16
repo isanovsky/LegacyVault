@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LegacyVault: cara kerja</title>
+  </head>
+  <body class="explainer">
+    <header class="masthead">
+      <div class="masthead-title">
+        <h1>LegacyVault</h1>
+        <p class="subtitle">Cara kerja, langkah demi langkah</p>
+        <nav class="page-nav" aria-label="Halaman">
+          <a href="/">Simulasi</a>
+          <a href="/penjelasan.html" aria-current="page">Cara kerja</a>
+        </nav>
+      </div>
+      <p class="hint keys-hint">Tombol panah kiri dan kanan juga berpindah langkah.</p>
+    </header>
+
+    <nav class="chapters" id="chapters" aria-label="Bagian penjelasan"></nav>
+
+    <main class="explainer-main">
+      <div class="chapter-head">
+        <h2 id="chapter-title"></h2>
+        <p id="chapter-intro" class="chapter-intro"></p>
+      </div>
+
+      <div id="scene" class="scene"></div>
+
+      <section class="caption" aria-live="polite">
+        <p id="step-counter" class="step-counter mono"></p>
+        <h3 id="step-title" class="step-title"></h3>
+        <p id="step-text" class="step-text"></p>
+      </section>
+
+      <div class="step-controls">
+        <button type="button" id="prev">Sebelumnya</button>
+        <button type="button" id="next" class="primary">Berikutnya</button>
+      </div>
+    </main>
+
+    <script type="module" src="/src/penjelasan.js"></script>
+  </body>
+</html>

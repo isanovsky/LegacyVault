@@ -559,3 +559,278 @@ input:disabled {
   color: var(--muted);
   font-size: 0.88rem;
 }
+
+/* ---------- Karakter tokoh ---------- */
+
+.character {
+  display: block;
+  flex: none;
+}
+
+/* Lembar pratinjau karakter (ui/karakter.html) */
+
+.character-sheet {
+  margin-top: 20px;
+}
+
+.character-sheet th[scope="row"] {
+  vertical-align: middle;
+  min-width: 13em;
+}
+
+.character-sheet td {
+  padding: 10px 14px 10px 0;
+  vertical-align: middle;
+}
+
+.sheet-name {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: normal;
+  color: var(--ink);
+}
+
+.sheet-role {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sheet-note {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.sheet-small {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ---------- Karakter di halaman simulasi ---------- */
+
+.avatar {
+  display: inline-block;
+  flex: none;
+  vertical-align: middle;
+}
+
+.avatar .character {
+  width: 100%;
+  height: 100%;
+}
+
+.persona {
+  align-items: center;
+}
+
+.persona-text {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.actor {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.actor .actor-line {
+  margin: 0;
+}
+
+.name-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-entry {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.log-entry > .avatar {
+  margin-top: 2px;
+}
+
+.log-body {
+  min-width: 0;
+}
+
+/* ---------- Navigasi antarhalaman ---------- */
+
+.page-nav {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.page-nav a {
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 2px 10px;
+  font-size: 0.9rem;
+}
+
+.page-nav a:hover {
+  background: var(--paper-shade);
+}
+
+.page-nav a[aria-current="page"] {
+  border: 2px solid var(--accent);
+  padding: 1px 9px;
+  font-weight: 700;
+}
+
+/* ---------- Halaman penjelasan (ui/penjelasan.html) ---------- */
+
+.keys-hint {
+  align-self: flex-end;
+}
+
+.chapters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.chapter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.chapter-number {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.chapter[aria-current="step"] {
+  border: 2px solid var(--accent);
+  padding: 4px 11px;
+  font-weight: 700;
+}
+
+.explainer-main {
+  max-width: 1080px;
+  margin: 18px auto 0;
+}
+
+.chapter-head h2 {
+  border-bottom: 0;
+  margin-bottom: 2px;
+}
+
+.chapter-intro {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+
+.scene {
+  border: 1px solid var(--rule);
+  background: #f9f7f1;
+}
+
+.scene-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.scene-svg .t-title {
+  font-family: var(--font-serif);
+}
+
+.scene-svg .t-body {
+  font-family: var(--font-sans);
+}
+
+.scene-svg .t-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bagian adegan: pudar jika tidak disorot, hilang jika belum muncul. */
+.scene [data-part] {
+  transition: opacity 450ms ease;
+}
+
+.scene [data-part].is-dim {
+  opacity: 0.28;
+}
+
+.scene [data-part].is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Benda yang berpindah bergerak ke posisi barunya, memperlihatkan arah aliran. */
+.scene .token-move {
+  transition: transform 750ms ease-in-out;
+}
+
+.scene.no-transition .token-move,
+.scene.no-transition [data-part] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene .token-move,
+  .scene [data-part] {
+    transition: none;
+  }
+}
+
+.caption {
+  border-left: 3px solid var(--accent);
+  padding: 4px 0 4px 14px;
+  margin-top: 16px;
+  min-height: 7.5em;
+}
+
+.step-counter {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.step-title {
+  font-style: normal;
+  font-size: 1.25rem;
+  margin: 2px 0 4px;
+}
+
+.step-text {
+  margin: 0;
+  max-width: 70ch;
+  font-size: 1.02rem;
+}
+
+.step-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.step-controls button {
+  min-width: 10em;
+  padding: 7px 16px;
+}
+
+.step-controls .primary:not(:disabled) {
+  border: 2px solid var(--accent);
+  padding: 6px 15px;
+  font-weight: 700;
+}

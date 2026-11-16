@@ -27,6 +27,7 @@ Proyek tugas kuliah: smart contract warisan ETH. Pemilik proyek masih awam Web3,
 ## Aturan UI
 - Ikuti panduan desain di `PROMPTS.md` tahap 5. Hindari tampilan template AI: tanpa gradien ungu-biru, tanpa glassmorphism, tanpa emoji, tanpa kalimat promosi.
 - Teks antarmuka dalam Bahasa Indonesia yang lugas.
+- Karakter tokoh (keputusan pemilik proyek, setelah tahap 5): enam tokoh demo dan benda pendukung (brankas, koin, blok, Anvil) digambar sebagai ilustrasi SVG buatan sendiri bergaya "tinta notaris": garis tinta gelap, sedikit warna lembut yang serasi dengan latar kertas, tanpa gradien. Karakter dipakai untuk mewakili peran dan keadaan (ekspresi berubah sesuai kejadian), bukan hiasan. Tetap tanpa emoji dan tanpa paket ikon luar. Nada tetap sopan karena topiknya warisan. Sumber gambar ada di `ui/src/characters.js`.
 - Private key akun default Anvil hanya boleh dipakai untuk jaringan lokal (chainId 31337). UI harus menolak memakai fitur itu di jaringan lain.
 
 ## Git
