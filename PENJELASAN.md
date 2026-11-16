@@ -721,3 +721,32 @@ J: Perbaikannya berarti menambah fitur baru, yaitu heir boleh menarik ke alamat 
 
 **T: Apakah kontrak ini sudah diaudit?**
 J: Belum oleh auditor independen. Ini review internal yang hasilnya didukung test. Slither juga belum dijalankan.
+---
+
+## Tahap 8: Persiapan presentasi
+
+### 1. Apa yang dibuat
+
+| File | Isi |
+|---|---|
+| `docs/DEMO.md` | Naskah demo sekitar 4–5 menit: persiapan, 9 langkah dengan contoh kalimat yang diucapkan, perkiraan waktu, dan rencana cadangan A–D jika UI bermasalah |
+| `docs/PERTANYAAN-DOSEN.md` | 15 pertanyaan sulit beserta jawaban singkat yang jujur, termasuk tentang database biasa, kolusi guardian, cara kontrak "tahu" pemilik meninggal, `block.timestamp`, dan surat wasiat |
+| `docs/Laporan-LegacyVault.docx` | Laporan Word 13 halaman: ringkasan, pendahuluan, desain, implementasi, pengujian, keamanan, keterbatasan, kesimpulan, dan lampiran |
+
+**Demo sudah digladi sungguhan sebelum naskahnya ditulis:**
+- Seluruh langkah UI dijalankan di Anvil yang baru, dari klaim yang ditolak sampai kedua ahli waris menarik 6 ETH dan 4 ETH.
+- Bagian terminal dijalankan juga: test keamanan (38 lolos) dan uji perusakan langsung. Setelah baris dirusak, test-nya gagal; setelah `git restore`, test-nya lolos lagi.
+- Pesan di layar yang dikutip di naskah adalah pesan asli dari gladi itu.
+
+**Laporan Word** dibuat dengan skrip, lalu daftar isinya diperbarui dan diperiksa per halaman melalui Microsoft Word. Isi sampul (nama, NIM, mata kuliah) sengaja dikosongkan untuk Anda isi sendiri.
+
+### 2. Konsep yang dipakai
+
+**Gladi bersih.** Demo langsung bisa gagal karena hal kecil, misalnya Anvil mati atau vault masih berisi sisa latihan. Karena itu naskahnya punya rencana cadangan berlapis: dari memulihkan dalam 30 detik, pindah ke halaman "Cara kerja", sampai menjalankan semuanya lewat test di terminal. Analoginya pembicara yang selalu membawa salinan slide di flashdisk.
+
+### 3. Pertanyaan yang mungkin diajukan dosen
+
+Daftar lengkapnya ada di `docs/PERTANYAAN-DOSEN.md`.
+
+**T: Kenapa uji perusakan ditunjukkan langsung saat demo?**
+J: Supaya penonton melihat sendiri bahwa test bisa gagal. Test yang tidak pernah terlihat gagal belum membuktikan apa-apa.

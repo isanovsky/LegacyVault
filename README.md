@@ -37,6 +37,9 @@ Kontrak ini hanya tahu bahwa pemilik **tidak aktif**, bukan bahwa pemilik mening
 | [docs/HASIL-UJI.md](docs/HASIL-UJI.md) | Ringkasan hasil test, test keamanan, uji perusakan, dan laporan gas |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Panduan deploy lengkap ke Anvil dan Sepolia |
 | [docs/MUTATION.md](docs/MUTATION.md) | Uji perusakan: 23 mutasi pada kontrak dan test yang menangkapnya |
+| [docs/DEMO.md](docs/DEMO.md) | Naskah demo 3–5 menit dan rencana cadangan |
+| [docs/PERTANYAAN-DOSEN.md](docs/PERTANYAAN-DOSEN.md) | 15 pertanyaan sulit beserta jawaban singkat yang jujur |
+| [docs/Laporan-LegacyVault.docx](docs/Laporan-LegacyVault.docx) | Laporan keseluruhan proyek dalam format Word |
 | [PENJELASAN.md](PENJELASAN.md) | Penjelasan per tahap dalam bahasa awam, beserta contoh pertanyaan dosen |
 
 ## Cara menjalankan
